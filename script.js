@@ -366,6 +366,7 @@ function renderBranches() {
   }
   branchesEl.innerHTML = filtered.map(contactRowHTML).join('');
   attachRowClickHandlers();
+  insertAddNodeAfterSelected();
 }
 
 // ---------- View: contacts grouped by category ----------
@@ -399,6 +400,7 @@ function renderCategoryGroups() {
     });
   });
   attachRowClickHandlers();
+  insertAddNodeAfterSelected();
 }
 
 // ---------- View: birthdays, calendar-style ----------
@@ -455,10 +457,22 @@ function drawCurves() {
     const x2 = r.left - wrapRect.left;
     const y2 = r.top + r.height / 2 - wrapRect.top;
     const midX = originX + (x2 - originX) * 0.55;
-    const isActive = row.dataset.id === selectedId;
+    const isActive = row.dataset.id === selectedId || row.id === 'addNodeRow';
     paths += `<path class="${isActive ? 'active' : ''}" d="M ${originX} ${originY} C ${midX} ${originY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
   });
   svg.innerHTML = paths;
+}
+
+function insertAddNodeAfterSelected() {
+  if (!selectedId) return;
+  const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]`);
+  if (!selRow) return;
+  const tile = document.createElement('div');
+  tile.className = 'contact-row add-node-row';
+  tile.id = 'addNodeRow';
+  tile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar contacto</span>`;
+  tile.addEventListener('click', () => openModal(null, [selectedId]));
+  selRow.insertAdjacentElement('afterend', tile);
 }
 
 // ---------- Detail panel (ficha) ----------

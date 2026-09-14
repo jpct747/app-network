@@ -406,6 +406,28 @@ body {
   background: var(--accent);
 }
 
+.add-node-row {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  color: var(--text-secondary);
+}
+.add-node-row:hover { border-color: var(--accent); color: var(--text-primary); }
+
+.add-node-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
 /* ---------- Avatars ---------- */
 
 .avatar {
