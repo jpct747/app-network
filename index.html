@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rede de Contactos — Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<button type="button" class="undo-fab" id="undoBtn" disabled title="Desfazer última ação">↩️ Desfazer</button>
+<div class="app">
+
+  <!-- Left: center orb + aggregate stat cards -->
+  <aside class="hub">
+    <div class="orb-wrap">
+      <div class="orb">
+        <span class="orb-icon">🤝</span>
+      </div>
+      <div class="orb-label">Rede de Contactos</div>
+      <div class="orb-tag" id="orbTag">0 contactos</div>
+    </div>
+
+    <div class="stat-cards" id="statCards"></div>
+  </aside>
+
+  <!-- Middle: search/filter toolbar + radial branches, one per contacto -->
+  <section class="branches-col">
+    <div class="toolbar">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔎 Pesquisar por nome, empresa, cargo ou tag…">
+      <button type="button" class="btn-ghost" id="toolsBtn">🛠️ Ferramentas</button>
+      <button type="button" class="btn-primary" id="addContactBtn">+ Novo Contacto</button>
+    </div>
+    <div class="chips-row" id="chipsRow"></div>
+    <div class="branches-wrap">
+      <svg class="curves" id="curves"></svg>
+      <div class="branches" id="branches"></div>
+    </div>
+  </section>
+
+  <!-- Right: detail panel (ficha) for selected contacto -->
+  <aside class="detail" id="detail"></aside>
+
+</div>
+
+<!-- Add / edit contact modal -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Novo Contacto</h3>
+      <button type="button" class="modal-close" id="modalClose">✕</button>
+    </div>
+
+    <form id="contactForm">
+      <div class="avatar-upload">
+        <div class="avatar-preview" id="avatarPreview">＋</div>
+        <input type="file" id="photoInput" accept="image/*" hidden>
+        <button type="button" class="btn-ghost" id="choosePhotoBtn">Escolher foto</button>
+        <button type="button" class="btn-ghost" id="removePhotoBtn" hidden>Remover foto</button>
+      </div>
+
+      <div class="form-grid">
+        <label class="form-field span-2">
+          <span>Nome completo *</span>
+          <input type="text" id="f_nome" required placeholder="Ex: Ana Rodrigues">
+        </label>
+
+        <label class="form-field">
+          <span>Categoria</span>
+          <select id="f_categoria"></select>
+        </label>
+        <label class="form-field" id="novaCategoriaWrap" hidden>
+          <span>Nova categoria</span>
+          <input type="text" id="f_novaCategoria" placeholder="Ex: Mentor">
+        </label>
+
+        <label class="form-field">
+          <span>Empresa</span>
+          <input type="text" id="f_empresa" placeholder="Ex: Acme Lda.">
+        </label>
+        <label class="form-field">
+          <span>Cargo / Função</span>
+          <input type="text" id="f_cargo" placeholder="Ex: CEO">
+        </label>
+
+        <label class="form-field">
+          <span>Telefone</span>
+          <input type="tel" id="f_telefone" placeholder="+351 912 345 678">
+        </label>
+        <label class="form-field">
+          <span>Email</span>
+          <input type="email" id="f_email" placeholder="nome@empresa.com">
+        </label>
+
+        <label class="form-field">
+          <span>Localidade</span>
+          <input type="text" id="f_localidade" placeholder="Ex: Lisboa">
+        </label>
+        <label class="form-field">
+          <span>LinkedIn / Website</span>
+          <input type="text" id="f_link" placeholder="linkedin.com/in/...">
+        </label>
+
+        <label class="form-field">
+          <span>Aniversário</span>
+          <input type="date" id="f_aniversario">
+        </label>
+        <label class="form-field checkbox-field">
+          <input type="checkbox" id="f_favorito">
+          <span>⭐ Marcar como favorito</span>
+        </label>
+
+        <label class="form-field span-2">
+          <span>Como nos conhecemos</span>
+          <input type="text" id="f_comoConhecemos" placeholder="Ex: Conferência Web Summit 2025">
+        </label>
+
+        <label class="form-field span-2">
+          <span>Notas pessoais</span>
+          <textarea id="f_notas" rows="3" placeholder="Interesses, família, hobbies, detalhes para lembrar…"></textarea>
+        </label>
+
+        <label class="form-field span-2">
+          <span>Tags (separadas por vírgula)</span>
+          <input type="text" id="f_tags" placeholder="Ex: investidor-anjo, tech, evento-2025">
+        </label>
+
+        <label class="form-field span-2">
+          <span>Contactos relacionados</span>
+          <div class="related-picker">
+            <input type="text" id="f_relatedSearch" list="relatedDatalist" placeholder="Nome de outro contacto…">
+            <datalist id="relatedDatalist"></datalist>
+            <button type="button" class="btn-ghost" id="addRelatedBtn">+ Associar</button>
+          </div>
+          <div class="chip-list" id="relatedChips"></div>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="cancelBtn">Cancelar</button>
+        <button type="submit" class="btn-primary">Guardar Contacto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tools modal: export / import / reminders -->
+<div class="modal-overlay" id="toolsModalOverlay" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Ferramentas</h3>
+      <button type="button" class="modal-close" id="toolsModalClose">✕</button>
+    </div>
+
+    <div class="tools-section">
+      <h4>Exportar</h4>
+      <div class="tools-actions">
+        <button type="button" class="btn-ghost" id="exportCsvBtn">⬇️ CSV</button>
+        <button type="button" class="btn-ghost" id="exportVcfBtn">⬇️ vCard (.vcf)</button>
+        <button type="button" class="btn-ghost" id="exportIcsBtn">📅 Aniversários (.ics)</button>
+        <button type="button" class="btn-ghost" id="backupExportBtn">💾 Cópia de segurança (JSON)</button>
+      </div>
+    </div>
+
+    <div class="tools-section">
+      <h4>Importar</h4>
+      <p class="tools-hint">Aceita ficheiros CSV ou vCard (.vcf) — por exemplo exportados do Google Contacts (Definições → Exportar) ou do LinkedIn (Definições → Obter os seus dados → Ligações).</p>
+      <div class="tools-actions">
+        <button type="button" class="btn-ghost" id="importFileBtn">📥 Importar CSV / vCard</button>
+        <input type="file" id="importFileInput" accept=".csv,.vcf,text/csv,text/vcard" hidden>
+      </div>
+    </div>
+
+    <div class="tools-section">
+      <h4>Lembretes</h4>
+      <p class="tools-hint">Ative as notificações do browser para ser avisado de aniversários e contactos em atraso enquanto tiver esta página aberta. Para lembretes que funcionam mesmo com o browser fechado, exporte os aniversários para o seu calendário (Google/Outlook/Apple).</p>
+      <div class="tools-actions">
+        <button type="button" class="btn-ghost" id="enableNotifBtn">🔔 Ativar notificações</button>
+        <span class="tools-hint" id="notifStatus"></span>
+      </div>
+    </div>
+
+    <div class="tools-section">
+      <h4>Partilhar com a equipa</h4>
+      <p class="tools-hint">Os contactos ficam guardados apenas neste browser. Para partilhar com colegas, exporte a cópia de segurança (JSON) acima e envie-lhes o ficheiro — eles importam-no na secção "Restaurar".</p>
+      <div class="tools-actions">
+        <button type="button" class="btn-ghost" id="backupImportBtn">♻️ Restaurar cópia de segurança</button>
+        <input type="file" id="backupImportInput" accept="application/json,.json" hidden>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
