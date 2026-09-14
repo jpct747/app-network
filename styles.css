@@ -516,7 +516,32 @@ body {
   top: 28px;
 }
 
-.d-head { display: flex; align-items: center; gap: 8px; color: var(--wire-active); font-size: 12px; font-weight: 600; }
+.d-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--wire-active);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.d-icon-actions { display: flex; gap: 6px; }
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.icon-btn-danger:hover { border-color: var(--status-critical); color: var(--status-critical); }
 
 .d-profile-row { display: flex; align-items: center; gap: 12px; }
 .d-profile-text { min-width: 0; flex: 1; }
@@ -571,15 +596,8 @@ body {
 
 .d-meta-text { font-size: 11.5px; color: var(--text-muted); }
 .d-meta-text b { color: var(--text-secondary); font-weight: 600; }
-
-.detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.detail-actions .btn-ghost { text-decoration: none; display: inline-flex; align-items: center; }
-.btn-danger { color: var(--status-critical); }
-.btn-danger:hover { border-color: var(--status-critical); }
+.d-meta-text a { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.d-meta-text a:hover b { color: var(--wire-active); }
 
 .btn-ghost {
   font-size: 11.5px;
@@ -603,10 +621,11 @@ body {
 }
 
 .subpoint-tabs {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
+.subpoint-tab { flex: 1 1 92px; }
 
 .subpoint-tab {
   display: flex;
@@ -998,6 +1017,87 @@ body {
   color: var(--text-primary);
 }
 
+/* ---------- Photo gallery (Fotos tab) ---------- */
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.photo-tile {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.photo-tile img { width: 100%; height: 100%; object-fit: cover; cursor: pointer; display: block; }
+
+.photo-remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.65);
+  border: none;
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+}
+.photo-remove-btn:hover { background: var(--status-critical); }
+
+.photo-add-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  aspect-ratio: 1;
+  border: 1px dashed var(--border-strong);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.photo-add-tile:hover { border-color: var(--wire-active); color: var(--text-primary); }
+
+.photo-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  padding: 30px;
+}
+.photo-lightbox-overlay img { max-width: 100%; max-height: 100%; border-radius: 10px; }
+.photo-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+}
+
 @media (max-width: 1100px) {
   .app { grid-template-columns: 1fr; }
   .hub { position: static; flex-direction: row; flex-wrap: wrap; }
@@ -1011,5 +1111,5 @@ body {
   .toolbar { flex-direction: column; align-items: stretch; }
   .form-grid { grid-template-columns: 1fr; }
   .form-field.span-2 { grid-column: auto; }
-  .subpoint-tabs { grid-template-columns: repeat(3, 1fr); }
+  .subpoint-tab { flex-basis: 75px; }
 }

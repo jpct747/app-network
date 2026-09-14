@@ -39,13 +39,19 @@ const ICONS = {
   edit: '<line x1="4" y1="20" x2="15" y2="9"/><polygon points="15,9 18,6 21,9 18,12"/><line x1="3" y1="21" x2="5" y2="19"/>',
   trash: '<line x1="4" y1="7" x2="20" y2="7"/><rect x="6" y="7" width="12" height="13" rx="1.5"/><line x1="9" y1="7" x2="9" y2="4"/><line x1="15" y1="7" x2="15" y2="4"/><line x1="9" y1="4" x2="15" y2="4"/><line x1="10" y1="11" x2="10" y2="16"/><line x1="14" y1="11" x2="14" y2="16"/>',
   check: '<polyline points="4,12 9,17 20,5"/>',
+  camera: '<rect x="3" y="7" width="18" height="13" rx="2"/><line x1="8" y1="7" x2="9.5" y2="4"/><line x1="9.5" y1="4" x2="14.5" y2="4"/><line x1="14.5" y1="4" x2="16" y2="7"/><circle cx="12" cy="13.5" r="3.3"/>',
+  heart: '<circle cx="8.5" cy="9" r="4.5" fill="currentColor" stroke="none"/><circle cx="15.5" cy="9" r="4.5" fill="currentColor" stroke="none"/><polygon points="4.5,11 19.5,11 12,21" fill="currentColor" stroke="none"/>',
+  x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
 };
 function icon(name, extraClass) {
   return `<svg class="svg-icon${extraClass ? ' ' + extraClass : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
 }
 
 const TAB_DEFS = [
-  { key: 'geral', icon: icon('idCard'), lbl: 'Geral' },
+  { key: 'geral', icon: icon('idCard'), lbl: 'Ficha Pessoal' },
+  { key: 'fotos', icon: icon('camera'), lbl: 'Fotos' },
+  { key: 'gostos', icon: icon('heart'), lbl: 'Gostos' },
   { key: 'perfil', icon: icon('profile'), lbl: 'Perfil' },
   { key: 'notas', icon: icon('fileText'), lbl: 'Notas' },
   { key: 'historico', icon: icon('activity'), lbl: 'Histórico' },
@@ -67,12 +73,18 @@ const NOTAS_FIELDS = [
 ];
 const PERFIL_FIELDS = [
   { key: 'familia', label: 'Família / Cônjuge e filhos', type: 'text' },
-  { key: 'hobbies', label: 'Hobbies & Interesses', type: 'text' },
   { key: 'formacao', label: 'Formação / Educação', type: 'text' },
   { key: 'idiomas', label: 'Idiomas', type: 'text' },
   { key: 'redesSociais', label: 'Outras redes sociais', type: 'text' },
   { key: 'assistente', label: 'Assistente / Contacto direto', type: 'text' },
-  { key: 'preferencias', label: 'Preferências pessoais (para lembrar em reuniões)', type: 'textarea' },
+];
+const GOSTOS_FIELDS = [
+  { key: 'atividadesFavoritas', label: 'Atividades favoritas', type: 'text' },
+  { key: 'pratosFavoritos', label: 'Pratos / comida favorita', type: 'text' },
+  { key: 'bebidaFavorita', label: 'Bebida favorita', type: 'text' },
+  { key: 'hobbies', label: 'Hobbies', type: 'text' },
+  { key: 'corFavorita', label: 'Cor favorita', type: 'text' },
+  { key: 'outrosGostos', label: 'Outros gostos', type: 'textarea' },
 ];
 
 // ---------- Date helpers ----------
@@ -596,6 +608,8 @@ const detailEl = document.getElementById('detail');
 function tabValuePreview(x, key) {
   switch (key) {
     case 'geral': return x.telefone || x.email || '—';
+    case 'fotos': return (x.fotos || []).length || '—';
+    case 'gostos': return GOSTOS_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'perfil': return PERFIL_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'notas': return (x.tags || []).length ? `${x.tags.length} tag(s)` : (x.notas ? 'Notas' : '—');
     case 'historico': {
@@ -719,6 +733,8 @@ function renderDetail() {
   let subpointHTML;
   if (activeTab === 'historico') subpointHTML = renderHistoricoTab(x);
   else if (activeTab === 'rede') subpointHTML = renderRedeTab(x);
+  else if (activeTab === 'fotos') subpointHTML = renderFotosTab(x);
+  else if (activeTab === 'gostos') subpointHTML = renderEditableFields(x, GOSTOS_FIELDS);
   else if (activeTab === 'perfil') subpointHTML = renderEditableFields(x, PERFIL_FIELDS);
   else if (activeTab === 'notas') subpointHTML = renderEditableFields(x, NOTAS_FIELDS);
   else {
@@ -729,7 +745,14 @@ function renderDetail() {
   }
 
   detailEl.innerHTML = `
-    <div class="d-head">${icon('idCard')} &nbsp;Ficha de Contacto</div>
+    <div class="d-head">
+      ${icon('idCard')} &nbsp;Ficha de Contacto
+      <span class="d-icon-actions">
+        <button type="button" class="icon-btn" id="saveVcfBtn" title="Guardar (.vcf)">${icon('download')}</button>
+        <button type="button" class="icon-btn" id="editBtn" title="Editar categoria, foto e ligações">${icon('edit')}</button>
+        <button type="button" class="icon-btn icon-btn-danger" id="deleteBtn" title="Eliminar contacto">${icon('trash')}</button>
+      </span>
+    </div>
 
     <div class="d-profile-row">
       ${avatarHTML(x, 'lg')}
@@ -748,16 +771,8 @@ function renderDetail() {
     </div>
 
     <div class="d-meta-row">
-      <div class="d-meta-text">${x.telefone ? `${icon('phone')} <b>${escapeHTML(x.telefone)}</b>` : 'Sem telefone registado'}</div>
-      <div class="d-meta-text">${x.email ? `${icon('mail')} <b>${escapeHTML(x.email)}</b>` : ''}</div>
-    </div>
-
-    <div class="detail-actions">
-      ${x.telefone ? `<a class="btn-ghost" href="tel:${encodeURIComponent(x.telefone)}">${icon('phone')} Ligar</a>` : ''}
-      ${x.email ? `<a class="btn-ghost" href="mailto:${encodeURIComponent(x.email)}">${icon('mail')} Email</a>` : ''}
-      <button type="button" class="btn-ghost" id="saveVcfBtn">${icon('download')} Guardar (.vcf)</button>
-      <button type="button" class="btn-ghost" id="editBtn">${icon('edit')} Editar</button>
-      <button type="button" class="btn-ghost btn-danger" id="deleteBtn">${icon('trash')} Eliminar</button>
+      <div class="d-meta-text">${x.telefone ? `<a href="tel:${encodeURIComponent(x.telefone)}">${icon('phone')} <b>${escapeHTML(x.telefone)}</b></a>` : 'Sem telefone registado'}</div>
+      <div class="d-meta-text">${x.email ? `<a href="mailto:${encodeURIComponent(x.email)}">${icon('mail')} <b>${escapeHTML(x.email)}</b></a>` : ''}</div>
     </div>
 
     <div class="subpoint-tabs" id="subpointTabs">
@@ -809,6 +824,79 @@ function renderDetail() {
     });
     document.getElementById('addRelatedContactBtn').addEventListener('click', () => openModal(null, [x.id]));
   }
+  if (activeTab === 'fotos') {
+    const addBtn = document.getElementById('addPhotoBtn');
+    const input = document.getElementById('photoGalleryInput');
+    addBtn.addEventListener('click', () => input.click());
+    input.addEventListener('change', () => {
+      const file = input.files[0];
+      if (!file) return;
+      resizeImageFileMax(file, 900, (dataUrl) => {
+        pushUndoSnapshot();
+        if (!Array.isArray(x.fotos)) x.fotos = [];
+        x.fotos.push(dataUrl);
+        saveContacts(contacts);
+        renderAll();
+      });
+      input.value = '';
+    });
+    detailEl.querySelectorAll('.photo-tile img').forEach(img => {
+      img.addEventListener('click', () => openPhotoLightbox(img.src));
+    });
+    detailEl.querySelectorAll('.photo-remove-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const photoIdx = Number(btn.dataset.idx);
+        pushUndoSnapshot();
+        x.fotos.splice(photoIdx, 1);
+        saveContacts(contacts);
+        renderAll();
+      });
+    });
+  }
+}
+
+// ---------- Fotos tab: a small photo gallery per contact ----------
+function renderFotosTab(x) {
+  const fotos = x.fotos || [];
+  const tiles = fotos.map((src, i) => `
+    <div class="photo-tile">
+      <img src="${src}" alt="">
+      <button type="button" class="photo-remove-btn" data-idx="${i}" title="Remover foto">${icon('x')}</button>
+    </div>
+  `).join('');
+  return `
+    <div class="photo-grid">
+      ${tiles}
+      <button type="button" class="photo-add-tile" id="addPhotoBtn">${icon('plus')}<span>Adicionar foto</span></button>
+    </div>
+    <input type="file" id="photoGalleryInput" accept="image/*" hidden>
+  `;
+}
+
+function resizeImageFileMax(file, maxDim, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openPhotoLightbox(src) {
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-lightbox-overlay';
+  overlay.innerHTML = `<button type="button" class="photo-lightbox-close">${icon('x')}</button><img src="${src}" alt="">`;
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
 }
 
 // ---------- Mutations ----------
