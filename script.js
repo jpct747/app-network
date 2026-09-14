@@ -7,7 +7,7 @@ const STORAGE_KEY = 'rede_contactos_v1';
 const NOTIFIED_KEY = 'rede_contactos_notified_v1';
 
 const DEFAULT_CATEGORIES = ['Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Networking', 'Prospect'];
-const CATEGORY_PALETTE = ['#0ca30c', '#3987e5', '#d4ad5c', '#9085e9', '#199e70', '#d55181', '#c98500', '#e66767', '#898781'];
+const CATEGORY_PALETTE = ['#4fae7a', '#d1a13e', '#8f7fd6', '#c97b9e', '#4fa3b0', '#cf7d54', '#7d90b0', '#b0555c', '#8a8f9c'];
 
 const TAB_DEFS = [
   { key: 'geral', icon: '📇', lbl: 'Geral' },
