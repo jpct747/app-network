@@ -467,12 +467,18 @@ function insertAddNodeAfterSelected() {
   if (!selectedId) return;
   const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]`);
   if (!selRow) return;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'selected-with-add';
+  selRow.parentNode.insertBefore(wrap, selRow);
+  wrap.appendChild(selRow);
+
   const tile = document.createElement('div');
   tile.className = 'contact-row add-node-row';
   tile.id = 'addNodeRow';
-  tile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar contacto</span>`;
+  tile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar</span>`;
   tile.addEventListener('click', () => openModal(null, [selectedId]));
-  selRow.insertAdjacentElement('afterend', tile);
+  wrap.appendChild(tile);
 }
 
 // ---------- Detail panel (ficha) ----------

@@ -406,6 +406,13 @@ body {
   background: var(--accent);
 }
 
+.selected-with-add {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .add-node-row {
   border-style: dashed;
   border-color: var(--border-strong);
