@@ -209,6 +209,7 @@ let searchTerm = '';
 let activeCategory = 'Todos';
 let statView = 'todos'; // 'todos' | 'categorias' | 'aniversarios' | 'followup' | 'favoritos'
 let focusMode = false; // true = branches panel shows only the selected contact + its connections
+let lastAddedId = null; // id of the most recently created contact, briefly highlighted in the list
 let activeTab = 'geral';
 let editingId = null;
 let currentPhotoData = null;
@@ -385,10 +386,11 @@ function selectionSafety() {
   if (!contacts.length) selectedId = null;
 }
 
-function contactRowHTML(x) {
+function contactRowHTML(x, i = 0) {
   const followUp = daysBetween(lastContactDate(x) || x.criadoEm) >= 90;
+  const delay = Math.min(i, 14) * 22;
   return `
-    <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}" style="border-left-color:${categoryColor(x.categoria)}">
+    <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}" style="border-left-color:${categoryColor(x.categoria)};animation-delay:${delay}ms">
       ${avatarHTML(x, 'sm')}
       <span class="name">${escapeHTML(x.nome)}</span>
       <span class="addr">${escapeHTML(x.empresa || x.cargo || '')}</span>
@@ -425,7 +427,7 @@ function renderBranches() {
     branchesEl.innerHTML = `<div class="empty-state">Nenhum contacto encontrado para este filtro.</div>`;
     return;
   }
-  branchesEl.innerHTML = filtered.map(contactRowHTML).join('');
+  branchesEl.innerHTML = filtered.map((x, i) => contactRowHTML(x, i)).join('');
   attachRowClickHandlers();
   insertConnectionsAfterSelected();
 }
@@ -465,7 +467,7 @@ function renderCategoryGroups() {
           <span class="cg-name">${cat}</span>
           <span class="cg-count">${items.length}</span>
         </button>
-        ${items.length ? items.map(contactRowHTML).join('') : '<div class="empty-state cg-empty">Sem contactos nesta categoria.</div>'}
+        ${items.length ? items.map((x, i) => contactRowHTML(x, i)).join('') : '<div class="empty-state cg-empty">Sem contactos nesta categoria.</div>'}
       </div>
     `;
   }).join('');
@@ -926,11 +928,23 @@ function deleteContact(id) {
   const ok = confirm(`Eliminar o contacto "${x.nome}"? Pode usar o botão "Desfazer" no canto superior esquerdo se mudar de ideias.`);
   if (!ok) return;
   pushUndoSnapshot();
-  contacts = contacts.filter(v => v.id !== id);
-  contacts.forEach(v => { v.relacionados = (v.relacionados || []).filter(rid => rid !== id); });
-  saveContacts(contacts);
-  selectionSafety();
-  renderAll();
+  const commit = () => {
+    contacts = contacts.filter(v => v.id !== id);
+    contacts.forEach(v => { v.relacionados = (v.relacionados || []).filter(rid => rid !== id); });
+    saveContacts(contacts);
+    selectionSafety();
+    renderAll();
+  };
+  const row = branchesEl.querySelector(`.contact-row[data-id="${id}"]`);
+  if (row) {
+    let done = false;
+    const finish = () => { if (done) return; done = true; commit(); };
+    row.classList.add('row-removing');
+    row.addEventListener('animationend', finish, { once: true });
+    setTimeout(finish, 260);
+  } else {
+    commit();
+  }
 }
 
 // ---------- File export helpers ----------
@@ -1244,6 +1258,7 @@ contactForm.addEventListener('submit', (e) => {
     contacts.push(newContact);
     selectedId = newContact.id;
     finalId = newContact.id;
+    lastAddedId = newContact.id;
   }
   syncBidirectionalRelations(finalId, data.relacionados, oldRelatedIds);
 
@@ -1413,16 +1428,43 @@ function checkReminders() {
 }
 
 // ---------- Render pipeline ----------
+function highlightNewRow() {
+  if (!lastAddedId) return;
+  const row = branchesEl.querySelector(`.contact-row[data-id="${lastAddedId}"]`);
+  lastAddedId = null;
+  if (!row) return;
+  row.classList.add('row-added');
+  row.addEventListener('animationend', () => row.classList.remove('row-added'), { once: true });
+}
+
 function renderAll() {
   renderStatCards();
   renderChips();
   renderBranches();
   renderDetail();
+  highlightNewRow();
   requestAnimationFrame(drawCurves);
 }
 
+// ---------- List density toggle (normal / compact) ----------
+const DENSITY_KEY = 'rede_contactos_density_v1';
+let compactMode = localStorage.getItem(DENSITY_KEY) === '1';
+const densityBtn = document.getElementById('densityBtn');
+function applyDensity() {
+  wrapEl.classList.toggle('compact', compactMode);
+  densityBtn.classList.toggle('active', compactMode);
+  densityBtn.setAttribute('aria-pressed', String(compactMode));
+  densityBtn.title = compactMode ? 'Vista compacta ativa (clique para vista normal)' : 'Alternar para vista compacta';
+}
+densityBtn.addEventListener('click', () => {
+  compactMode = !compactMode;
+  localStorage.setItem(DENSITY_KEY, compactMode ? '1' : '0');
+  applyDensity();
+});
+
 // ---------- Init ----------
 selectionSafety();
+applyDensity();
 renderAll();
 window.addEventListener('resize', drawCurves);
 new ResizeObserver(drawCurves).observe(wrapEl);

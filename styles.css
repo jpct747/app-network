@@ -81,6 +81,17 @@ body {
   padding: 28px;
   min-height: 100vh;
   align-items: start;
+  animation: appFadeIn .45s ease both;
+}
+
+@keyframes appFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- Left hub: orb + stat cards ---------- */
@@ -154,7 +165,14 @@ body {
   text-align: left;
   cursor: pointer;
   color: var(--text-primary);
+  animation: fadeInUp .3s ease both;
 }
+.stat-cards .stat-card:nth-child(1) { animation-delay: 0ms; }
+.stat-cards .stat-card:nth-child(2) { animation-delay: 30ms; }
+.stat-cards .stat-card:nth-child(3) { animation-delay: 60ms; }
+.stat-cards .stat-card:nth-child(4) { animation-delay: 90ms; }
+.stat-cards .stat-card:nth-child(5) { animation-delay: 120ms; }
+.stat-cards .stat-card:nth-child(n+6) { animation-delay: 150ms; }
 .stat-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 
 .stat-card.active {
@@ -319,6 +337,7 @@ body {
   width: fit-content;
   max-width: 100%;
   transition: border-color .15s, background .15s, transform .1s;
+  animation: fadeInUp .32s ease both;
 }
 
 .contact-row:hover { border-top-color: var(--border-strong); border-right-color: var(--border-strong); border-bottom-color: var(--border-strong); }
@@ -330,6 +349,31 @@ body {
 
 .contact-row .name { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .contact-row .addr { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+@keyframes rowAddedGlow {
+  0% { box-shadow: 0 0 0 0 rgba(201,169,98,0.5); }
+  70% { box-shadow: 0 0 0 9px rgba(201,169,98,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,169,98,0); }
+}
+.contact-row.row-added {
+  border-color: var(--wire-active);
+  animation: rowAddedGlow 1.1s ease-out;
+}
+
+@keyframes rowRemoveOut {
+  to { opacity: 0; transform: scale(.94) translateX(8px); }
+}
+.contact-row.row-removing {
+  animation: rowRemoveOut .22s ease forwards;
+  pointer-events: none;
+}
+
+/* ---------- Compact density mode ---------- */
+.branches-wrap.compact .branches { gap: 4px; }
+.branches-wrap.compact .contact-row { padding: 4px 12px 4px 7px; gap: 8px; }
+.branches-wrap.compact .contact-row .addr { display: none; }
+.branches-wrap.compact .avatar-sm { width: 20px; height: 20px; font-size: 9px; }
+.branches-wrap.compact .contact-row .name { font-size: 12px; }
 
 .contact-row .pillrow {
   display: flex;
@@ -611,6 +655,20 @@ body {
   white-space: nowrap;
 }
 .btn-ghost:hover { border-color: var(--border-strong); }
+
+.btn-ghost.icon-only {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  padding: 6px;
+  flex-shrink: 0;
+}
+.btn-ghost.icon-only.active {
+  border-color: var(--wire-active);
+  color: var(--wire-active);
+  background: var(--wire-soft);
+}
 
 .card {
   background: var(--surface-2);
@@ -1112,4 +1170,8 @@ body {
   .form-grid { grid-template-columns: 1fr; }
   .form-field.span-2 { grid-column: auto; }
   .subpoint-tab { flex-basis: 75px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app, .stat-card, .contact-row, .orb { animation: none !important; }
 }
