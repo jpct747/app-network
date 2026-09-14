@@ -5,6 +5,7 @@
 
 const STORAGE_KEY = 'rede_contactos_v1';
 const NOTIFIED_KEY = 'rede_contactos_notified_v1';
+const INDUSTRY_DEMO_KEY = 'rede_contactos_industry_demo_v1';
 
 const DEFAULT_CATEGORIES = [
   'Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Prospect',
@@ -72,6 +73,20 @@ function seedContacts() {
     c('Gabriela Nunes', 'Prospect', 'NovaMed', 'CFO', '+351 939 664 887', 'gabriela.nunes@novamed.pt', 'Faro', 'linkedin.com/in/gabrielanunes', '', 'Reunião comercial em Faro', 'Interessada numa proposta para o próximo trimestre.', ['saude', 'lead-quente'], false, isoDaysAgo(10)),
     c('Hugo Martins', 'Cliente', 'BuildCo', 'CEO', '+351 916 220 998', 'hugo.martins@buildco.pt', 'Setúbal', '', '', 'Cliente desde 2021', 'Gosta de futebol de 5. Tem contrato para renovar em breve.', ['construcao', 'conta-chave'], false, isoDaysAgo(95)),
     c('Inês Pereira', 'Investidor', 'Angel Fund PT', 'Investidora Anjo', '+351 961 445 776', 'ines.pereira@angelfund.pt', 'Lisboa', 'linkedin.com/in/inespereira', birthdayInDays(2), 'Apresentação por um sócio', 'Muito ativa na comunidade de startups portuguesa.', ['investidor-anjo', 'mentoria'], true, isoDaysAgo(60)),
+    ...industryDemoContacts(),
+  ];
+}
+
+function industryDemoContacts() {
+  return [
+    c('Marta Ribeiro', 'Imobiliário', 'Predimax Imobiliária', 'Diretora Comercial', '+351 913 220 145', 'marta.ribeiro@predimax.pt', 'Lisboa', 'linkedin.com/in/martaribeiro', '', 'Feira imobiliária em Lisboa', 'Especialista em imóveis de luxo na zona de Cascais.', ['imobiliario', 'luxo'], false, isoDaysAgo(15)),
+    c('Tiago Andrade', 'Tecnologia & Software', 'NexCode Software', 'CTO', '+351 924 331 208', 'tiago.andrade@nexcode.pt', 'Porto', 'linkedin.com/in/tiagoandrade', '', 'Meetup de tecnologia no Porto', 'Trabalha com equipas remotas espalhadas pela Europa.', ['tech', 'saas'], false, isoDaysAgo(30)),
+    c('Sofia Almeida', 'Serviços Financeiros & Jurídicos', 'Almeida & Associados', 'Advogada Sócia', '+351 935 774 902', 'sofia.almeida@almeidaassociados.pt', 'Lisboa', 'linkedin.com/in/sofiaalmeida', '', 'Indicação de um cliente comum', 'Especialista em direito comercial e contratos internacionais.', ['juridico', 'contratos'], false, isoDaysAgo(40)),
+    c('Rui Fonseca', 'Marketing, Vendas & Comunicação', 'Vértice Comunicação', 'Diretor de Marketing', '+351 962 118 447', 'rui.fonseca@verticecom.pt', 'Braga', 'linkedin.com/in/ruifonseca', '', 'Conferência de marketing digital', 'Muito focado em performance e growth marketing.', ['marketing', 'growth'], false, isoDaysAgo(25)),
+    c('Beatriz Nogueira', 'Turismo, Hotelaria & Restauração', 'Hotel Costa Azul', 'Gerente Geral', '+351 917 556 330', 'beatriz.nogueira@costaazul.pt', 'Faro', '', '', 'Evento do setor do turismo no Algarve', 'Sempre a par das tendências de turismo sustentável.', ['turismo', 'hotelaria'], false, isoDaysAgo(50)),
+    c('André Correia', 'Saúde', 'Clínica Vitalis', 'Diretor Clínico', '+351 968 440 771', 'andre.correia@vitalis.pt', 'Coimbra', '', '', 'Parceria para seguro de saúde', 'Interessado em soluções de telemedicina.', ['saude', 'clinica'], false, isoDaysAgo(35)),
+    c('Mariana Teixeira', 'Sustentabilidade', 'GreenPath Consulting', 'Consultora ESG', '+351 921 887 653', 'mariana.teixeira@greenpath.pt', 'Lisboa', 'linkedin.com/in/marianateixeira', '', 'Workshop de sustentabilidade empresarial', 'Ajuda empresas a preparar relatórios ESG.', ['sustentabilidade', 'esg'], false, isoDaysAgo(18)),
+    c('Carlos Pinheiro', 'Maquinaria', 'MetalTech Máquinas', 'Diretor Industrial', '+351 966 203 519', 'carlos.pinheiro@metaltech.pt', 'Aveiro', '', '', 'Feira industrial em Aveiro', 'Fornece equipamento industrial para várias fábricas do norte.', ['industria', 'equipamento'], false, isoDaysAgo(60)),
   ];
 }
 
@@ -111,11 +126,18 @@ function loadContacts() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const list = JSON.parse(raw);
-      if (migrateContacts(list)) saveContacts(list);
+      let changed = migrateContacts(list);
+      if (!localStorage.getItem(INDUSTRY_DEMO_KEY)) {
+        list.push(...industryDemoContacts());
+        changed = true;
+      }
+      localStorage.setItem(INDUSTRY_DEMO_KEY, '1');
+      if (changed) saveContacts(list);
       return list;
     }
   } catch (e) { /* corrupt storage, fall through to reseed */ }
   const seeded = seedContacts();
+  localStorage.setItem(INDUSTRY_DEMO_KEY, '1');
   saveContacts(seeded);
   return seeded;
 }
@@ -353,7 +375,7 @@ function renderCategoryGroups() {
     branchesEl.innerHTML = `<div class="empty-state">Nenhum contacto encontrado para este filtro.</div>`;
     return;
   }
-  const cats = getCategoryList().filter(cat => filtered.some(x => x.categoria === cat));
+  const cats = getCategoryList();
   branchesEl.innerHTML = cats.map(cat => {
     const items = filtered.filter(x => x.categoria === cat);
     const color = categoryColor(cat);
@@ -364,7 +386,7 @@ function renderCategoryGroups() {
           <span class="cg-name">${cat}</span>
           <span class="cg-count">${items.length}</span>
         </button>
-        ${items.map(contactRowHTML).join('')}
+        ${items.length ? items.map(contactRowHTML).join('') : '<div class="empty-state cg-empty">Sem contactos nesta categoria.</div>'}
       </div>
     `;
   }).join('');
@@ -505,10 +527,8 @@ function renderHistoricoTab(x) {
 
 function renderRedeTab(x) {
   const related = (x.relacionados || []).map(id => contacts.find(v => v.id === id)).filter(Boolean);
-  if (!related.length) {
-    return `<div class="empty-state" style="padding:10px 0;">Sem contactos associados.<br>Edite este contacto para associar pessoas que se conhecem entre si.</div>`;
-  }
-  return related.map(r => `
+  const firstName = (x.nome || '').split(' ')[0] || 'este contacto';
+  const rows = related.map(r => `
     <div class="related-row" data-id="${r.id}">
       ${avatarHTML(r, 'sm')}
       <div>
@@ -517,6 +537,16 @@ function renderRedeTab(x) {
       </div>
     </div>
   `).join('');
+  const addTile = `
+    <button type="button" class="related-add-tile" id="addRelatedContactBtn">
+      <span class="related-add-icon">+</span>
+      <span>Adicionar contacto ligado a ${escapeHTML(firstName)}</span>
+    </button>
+  `;
+  if (!related.length) {
+    return `<div class="empty-state" style="padding:6px 0 12px;">Sem contactos associados ainda.</div>${addTile}`;
+  }
+  return rows + addTile;
 }
 
 function suggestion(x) {
@@ -645,6 +675,7 @@ function renderDetail() {
     detailEl.querySelectorAll('.related-row').forEach(row => {
       row.addEventListener('click', () => { selectedId = row.dataset.id; activeTab = 'geral'; renderAll(); });
     });
+    document.getElementById('addRelatedContactBtn').addEventListener('click', () => openModal(null, [x.id]));
   }
 }
 
@@ -656,6 +687,23 @@ function toggleFavorite(id) {
   x.favorito = !x.favorito;
   saveContacts(contacts);
   renderAll();
+}
+
+function syncBidirectionalRelations(contactId, newRelatedIds, oldRelatedIds) {
+  const added = newRelatedIds.filter(id => !oldRelatedIds.includes(id));
+  const removed = oldRelatedIds.filter(id => !newRelatedIds.includes(id));
+  added.forEach(id => {
+    const other = contacts.find(v => v.id === id);
+    if (!other) return;
+    if (!Array.isArray(other.relacionados)) other.relacionados = [];
+    if (!other.relacionados.includes(contactId)) other.relacionados.push(contactId);
+  });
+  removed.forEach(id => {
+    const other = contacts.find(v => v.id === id);
+    if (other && Array.isArray(other.relacionados)) {
+      other.relacionados = other.relacionados.filter(rid => rid !== contactId);
+    }
+  });
 }
 
 function deleteContact(id) {
@@ -856,10 +904,10 @@ document.getElementById('addRelatedBtn').addEventListener('click', () => {
   renderRelatedChips();
 });
 
-function openModal(contact) {
+function openModal(contact, presetRelatedIds) {
   editingId = contact ? contact.id : null;
   currentPhotoData = contact ? contact.foto : null;
-  formRelatedIds = contact ? [...(contact.relacionados || [])] : [];
+  formRelatedIds = contact ? [...(contact.relacionados || [])] : [...(presetRelatedIds || [])];
   document.getElementById('modalTitle').textContent = contact ? 'Editar Contacto' : 'Novo Contacto';
 
   document.getElementById('f_nome').value = contact ? contact.nome : '';
@@ -970,15 +1018,20 @@ contactForm.addEventListener('submit', (e) => {
   };
 
   pushUndoSnapshot();
+  const oldRelatedIds = editingId ? [...((contacts.find(v => v.id === editingId) || {}).relacionados || [])] : [];
+  let finalId;
   if (editingId) {
     const idx = contacts.findIndex(v => v.id === editingId);
     if (idx !== -1) contacts[idx] = { ...contacts[idx], ...data };
     selectedId = editingId;
+    finalId = editingId;
   } else {
     const newContact = { ...data, id: cryptoRandomId(), interacoes: [], ultimoContato: '', criadoEm: todayISO() };
     contacts.push(newContact);
     selectedId = newContact.id;
+    finalId = newContact.id;
   }
+  syncBidirectionalRelations(finalId, data.relacionados, oldRelatedIds);
 
   saveContacts(contacts);
   closeModal();
