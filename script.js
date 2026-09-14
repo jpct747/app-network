@@ -7,13 +7,13 @@ const STORAGE_KEY = 'rede_contactos_v1';
 const NOTIFIED_KEY = 'rede_contactos_notified_v1';
 
 const DEFAULT_CATEGORIES = [
-  'Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Prospect', 'Networking',
+  'Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Prospect',
   'Imobiliário', 'Tecnologia & Software', 'Serviços Financeiros & Jurídicos',
   'Marketing, Vendas & Comunicação', 'Turismo, Hotelaria & Restauração',
   'Saúde', 'Sustentabilidade', 'Maquinaria',
 ];
 const CATEGORY_PALETTE = [
-  '#4fae7a', '#d1a13e', '#9b7fd6', '#c97b9e', '#cf7d54', '#a68a5b', '#a893b0',
+  '#4fae7a', '#d1a13e', '#9b7fd6', '#c97b9e', '#cf7d54', '#a68a5b',
   '#7a8f4f', '#b0555c', '#8f6fae', '#c9944f', '#5fae8f', '#ae5f7a',
   '#6f9e5f', '#9c9284',
 ];
@@ -68,7 +68,7 @@ function seedContacts() {
     c('Carla Mendes', 'Fornecedor', 'GraphDesign Studio', 'Fundadora', '+351 926 550 112', 'carla@graphdesign.studio', 'Braga', 'graphdesign.studio', '', 'Recomendada por um cliente', 'Muito rápida a responder. Trabalha também com ilustração.', ['design', 'freelancer'], false, isoDaysAgo(20)),
     c('Diogo Alves', 'Parceiro', 'TechHub Coworking', 'Diretor de Parcerias', '+351 917 883 440', 'diogo.alves@techhub.pt', 'Lisboa', 'linkedin.com/in/diogoalves', '', 'Evento de startups no TechHub', 'Organiza meetups mensais de empreendedorismo.', ['coworking', 'eventos'], true, isoDaysAgo(45)),
     c('Elisa Santos', 'Equipa', '', 'Head of Sales', '+351 963 774 221', 'elisa.santos@aminhaempresa.pt', 'Lisboa', '', '', 'Contratada em 2024', 'Maratonista nos tempos livres.', ['equipa-interna'], false, isoDaysAgo(2)),
-    c('Filipe Costa', 'Networking', '', 'Consultor Independente', '+351 968 102 337', 'filipe.costa.consultor@gmail.com', 'Coimbra', 'linkedin.com/in/filipecosta', '', 'Curso de gestão em 2022', 'Especialista em internacionalização. Já não falamos há tempos.', ['consultoria'], false, isoDaysAgo(200)),
+    c('Filipe Costa', 'Parceiro', '', 'Consultor Independente', '+351 968 102 337', 'filipe.costa.consultor@gmail.com', 'Coimbra', 'linkedin.com/in/filipecosta', '', 'Curso de gestão em 2022', 'Especialista em internacionalização. Já não falamos há tempos.', ['consultoria'], false, isoDaysAgo(200)),
     c('Gabriela Nunes', 'Prospect', 'NovaMed', 'CFO', '+351 939 664 887', 'gabriela.nunes@novamed.pt', 'Faro', 'linkedin.com/in/gabrielanunes', '', 'Reunião comercial em Faro', 'Interessada numa proposta para o próximo trimestre.', ['saude', 'lead-quente'], false, isoDaysAgo(10)),
     c('Hugo Martins', 'Cliente', 'BuildCo', 'CEO', '+351 916 220 998', 'hugo.martins@buildco.pt', 'Setúbal', '', '', 'Cliente desde 2021', 'Gosta de futebol de 5. Tem contrato para renovar em breve.', ['construcao', 'conta-chave'], false, isoDaysAgo(95)),
     c('Inês Pereira', 'Investidor', 'Angel Fund PT', 'Investidora Anjo', '+351 961 445 776', 'ines.pereira@angelfund.pt', 'Lisboa', 'linkedin.com/in/inespereira', birthdayInDays(2), 'Apresentação por um sócio', 'Muito ativa na comunidade de startups portuguesa.', ['investidor-anjo', 'mentoria'], true, isoDaysAgo(60)),
@@ -278,8 +278,7 @@ function renderChips() {
   chipsRow.style.display = '';
   searchInput.style.display = '';
 
-  const present = getCategoryList().filter(cat => getBaseByView().some(x => x.categoria === cat));
-  const chips = ['Todos', ...present];
+  const chips = ['Todos', ...getCategoryList()];
   chipsRow.innerHTML = chips.map(cat => `
     <button type="button" class="chip ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}"
       ${cat !== 'Todos' ? `style="--chip-color:${categoryColor(cat)}"` : ''}>${cat}</button>
@@ -773,7 +772,7 @@ function handleCSVImport(text) {
     const telefone = get(idx.telefone);
     if (!nome && !email && !telefone) continue;
     if (!nome) nome = email || telefone || 'Sem nome';
-    result.push(c(nome, 'Networking', get(idx.empresa), get(idx.cargo), telefone, email, get(idx.localidade), get(idx.link), '', 'Importado', '', [], false, ''));
+    result.push(c(nome, 'Prospect', get(idx.empresa), get(idx.cargo), telefone, email, get(idx.localidade), get(idx.link), '', 'Importado', '', [], false, ''));
   }
   return result;
 }
@@ -802,7 +801,7 @@ function parseVCards(text) {
     });
     if (!nome && !email && !telefone) return;
     if (!nome) nome = email || telefone || 'Sem nome';
-    result.push(c(nome, 'Networking', empresa, cargo, telefone, email, '', link, aniversario, 'Importado (vCard)', '', [], false, ''));
+    result.push(c(nome, 'Prospect', empresa, cargo, telefone, email, '', link, aniversario, 'Importado (vCard)', '', [], false, ''));
   });
   return result;
 }
