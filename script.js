@@ -6,8 +6,17 @@
 const STORAGE_KEY = 'rede_contactos_v1';
 const NOTIFIED_KEY = 'rede_contactos_notified_v1';
 
-const DEFAULT_CATEGORIES = ['Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Networking', 'Prospect'];
-const CATEGORY_PALETTE = ['#4fae7a', '#d1a13e', '#9b7fd6', '#c97b9e', '#4fae9a', '#cf7d54', '#a68a5b', '#b0555c', '#8f8a80'];
+const DEFAULT_CATEGORIES = [
+  'Cliente', 'Fornecedor', 'Investidor', 'Parceiro', 'Equipa', 'Prospect',
+  'Imobiliário', 'Tecnologia & Software', 'Serviços Financeiros & Jurídicos',
+  'Marketing, Vendas & Comunicação', 'Turismo, Hotelaria & Restauração',
+  'Saúde', 'Sustentabilidade', 'Maquinaria',
+];
+const CATEGORY_PALETTE = [
+  '#4fae7a', '#d1a13e', '#9b7fd6', '#c97b9e', '#cf7d54', '#a68a5b',
+  '#7a8f4f', '#b0555c', '#8f6fae', '#c9944f', '#5fae8f', '#ae5f7a',
+  '#6f9e5f', '#9c9284',
+];
 
 const TAB_DEFS = [
   { key: 'geral', icon: '📇', lbl: 'Geral' },
@@ -59,7 +68,7 @@ function seedContacts() {
     c('Carla Mendes', 'Fornecedor', 'GraphDesign Studio', 'Fundadora', '+351 926 550 112', 'carla@graphdesign.studio', 'Braga', 'graphdesign.studio', '', 'Recomendada por um cliente', 'Muito rápida a responder. Trabalha também com ilustração.', ['design', 'freelancer'], false, isoDaysAgo(20)),
     c('Diogo Alves', 'Parceiro', 'TechHub Coworking', 'Diretor de Parcerias', '+351 917 883 440', 'diogo.alves@techhub.pt', 'Lisboa', 'linkedin.com/in/diogoalves', '', 'Evento de startups no TechHub', 'Organiza meetups mensais de empreendedorismo.', ['coworking', 'eventos'], true, isoDaysAgo(45)),
     c('Elisa Santos', 'Equipa', '', 'Head of Sales', '+351 963 774 221', 'elisa.santos@aminhaempresa.pt', 'Lisboa', '', '', 'Contratada em 2024', 'Maratonista nos tempos livres.', ['equipa-interna'], false, isoDaysAgo(2)),
-    c('Filipe Costa', 'Networking', '', 'Consultor Independente', '+351 968 102 337', 'filipe.costa.consultor@gmail.com', 'Coimbra', 'linkedin.com/in/filipecosta', '', 'Curso de gestão em 2022', 'Especialista em internacionalização. Já não falamos há tempos.', ['consultoria'], false, isoDaysAgo(200)),
+    c('Filipe Costa', 'Parceiro', '', 'Consultor Independente', '+351 968 102 337', 'filipe.costa.consultor@gmail.com', 'Coimbra', 'linkedin.com/in/filipecosta', '', 'Curso de gestão em 2022', 'Especialista em internacionalização. Já não falamos há tempos.', ['consultoria'], false, isoDaysAgo(200)),
     c('Gabriela Nunes', 'Prospect', 'NovaMed', 'CFO', '+351 939 664 887', 'gabriela.nunes@novamed.pt', 'Faro', 'linkedin.com/in/gabrielanunes', '', 'Reunião comercial em Faro', 'Interessada numa proposta para o próximo trimestre.', ['saude', 'lead-quente'], false, isoDaysAgo(10)),
     c('Hugo Martins', 'Cliente', 'BuildCo', 'CEO', '+351 916 220 998', 'hugo.martins@buildco.pt', 'Setúbal', '', '', 'Cliente desde 2021', 'Gosta de futebol de 5. Tem contrato para renovar em breve.', ['construcao', 'conta-chave'], false, isoDaysAgo(95)),
     c('Inês Pereira', 'Investidor', 'Angel Fund PT', 'Investidora Anjo', '+351 961 445 776', 'ines.pereira@angelfund.pt', 'Lisboa', 'linkedin.com/in/inespereira', birthdayInDays(2), 'Apresentação por um sócio', 'Muito ativa na comunidade de startups portuguesa.', ['investidor-anjo', 'mentoria'], true, isoDaysAgo(60)),
@@ -119,6 +128,7 @@ let contacts = loadContacts();
 let selectedId = contacts[0] ? contacts[0].id : null;
 let searchTerm = '';
 let activeCategory = 'Todos';
+let statView = 'todos'; // 'todos' | 'categorias' | 'aniversarios' | 'followup' | 'favoritos'
 let activeTab = 'geral';
 let editingId = null;
 let currentPhotoData = null;
@@ -199,13 +209,28 @@ function logContactToday(id) {
 }
 
 // ---------- Filtering ----------
+function getBaseByView() {
+  if (statView === 'followup') return contacts.filter(x => daysBetween(lastContactDate(x) || x.criadoEm) >= 90);
+  if (statView === 'favoritos') return contacts.filter(x => x.favorito);
+  return contacts;
+}
+
 function getFiltered() {
-  return contacts.filter(x => {
+  return getBaseByView().filter(x => {
     if (activeCategory !== 'Todos' && x.categoria !== activeCategory) return false;
     if (!searchTerm) return true;
     const hay = norm([x.nome, x.empresa, x.cargo, x.localidade, (x.tags || []).join(' ')].join(' '));
     return hay.includes(norm(searchTerm));
   });
+}
+
+function setStatView(view) {
+  statView = view;
+  activeCategory = 'Todos';
+  searchTerm = '';
+  document.getElementById('searchInput').value = '';
+  selectionSafety();
+  renderAll();
 }
 
 // ---------- Aggregate stats ----------
@@ -220,33 +245,46 @@ function computeStats() {
 function renderStatCards() {
   const s = computeStats();
   const cards = [
-    { icon: '👥', num: s.total, lbl: 'Contactos', active: true },
-    { icon: '🏷️', num: s.categorias, lbl: 'Categorias' },
-    { icon: '🎂', num: s.aniversarios, lbl: 'Aniversários (30d)' },
-    { icon: '⏰', num: s.semContacto, lbl: 'Follow-up (90d+)', warn: s.semContacto > 0 },
-    { icon: '⭐', num: s.favoritos, lbl: 'Favoritos' },
+    { icon: '👥', num: s.total, lbl: 'Contactos', view: 'todos' },
+    { icon: '🏷️', num: s.categorias, lbl: 'Categorias', view: 'categorias' },
+    { icon: '🎂', num: s.aniversarios, lbl: 'Aniversários (30d)', view: 'aniversarios' },
+    { icon: '⏰', num: s.semContacto, lbl: 'Follow-up (90d+)', view: 'followup', warn: s.semContacto > 0 },
+    { icon: '⭐', num: s.favoritos, lbl: 'Favoritos', view: 'favoritos' },
   ];
   document.getElementById('statCards').innerHTML = cards.map(cd => `
-    <div class="stat-card ${cd.active ? 'active' : ''} ${cd.warn ? 'warn' : ''}">
+    <button type="button" class="stat-card ${cd.view === statView ? 'active' : ''} ${cd.warn ? 'warn' : ''}" data-view="${cd.view}">
       <div class="icon">${cd.icon}</div>
       <div>
         <div class="num">${cd.num}</div>
         <div class="lbl">${cd.lbl}</div>
       </div>
-    </div>
+    </button>
   `).join('');
+  document.querySelectorAll('.stat-card').forEach(btn => {
+    btn.addEventListener('click', () => setStatView(btn.dataset.view));
+  });
   document.getElementById('orbTag').textContent = `${s.total} contacto${s.total === 1 ? '' : 's'}`;
 }
 
 // ---------- Category filter chips ----------
 function renderChips() {
-  const present = getCategoryList().filter(cat => contacts.some(x => x.categoria === cat));
+  const chipsRow = document.getElementById('chipsRow');
+  const searchInput = document.getElementById('searchInput');
+  if (statView === 'aniversarios') {
+    chipsRow.style.display = 'none';
+    searchInput.style.display = 'none';
+    return;
+  }
+  chipsRow.style.display = '';
+  searchInput.style.display = '';
+
+  const present = getCategoryList().filter(cat => getBaseByView().some(x => x.categoria === cat));
   const chips = ['Todos', ...present];
-  document.getElementById('chipsRow').innerHTML = chips.map(cat => `
+  chipsRow.innerHTML = chips.map(cat => `
     <button type="button" class="chip ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}"
       ${cat !== 'Todos' ? `style="--chip-color:${categoryColor(cat)}"` : ''}>${cat}</button>
   `).join('');
-  document.querySelectorAll('.chip').forEach(btn => {
+  chipsRow.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
       selectionSafety();
@@ -266,38 +304,112 @@ function selectionSafety() {
   if (!contacts.length) selectedId = null;
 }
 
-function renderBranches() {
-  const filtered = getFiltered();
-  if (!contacts.length) {
-    branchesEl.innerHTML = `<div class="empty-state">Ainda não tem contactos.<br>Adicione o primeiro com "+ Novo Contacto".</div>`;
-    return;
-  }
-  if (!filtered.length) {
-    branchesEl.innerHTML = `<div class="empty-state">Nenhum contacto encontrado para este filtro.</div>`;
-    return;
-  }
-  branchesEl.innerHTML = filtered.map(x => {
-    const followUp = daysBetween(lastContactDate(x) || x.criadoEm) >= 90;
-    return `
-      <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}">
-        ${avatarHTML(x, 'sm')}
-        <span class="name">${escapeHTML(x.nome)}</span>
-        <span class="addr">${escapeHTML(x.empresa || x.cargo || '')}</span>
-        <span class="pillrow">
-          ${x.favorito ? `<span class="star">⭐</span>` : ''}
-          ${followUp ? `<span class="pay-dot" style="background:#d03b3b" title="Sem contacto há 90+ dias"></span>` : ''}
-        </span>
-      </div>
-    `;
-  }).join('');
+function contactRowHTML(x) {
+  const followUp = daysBetween(lastContactDate(x) || x.criadoEm) >= 90;
+  return `
+    <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}">
+      ${avatarHTML(x, 'sm')}
+      <span class="name">${escapeHTML(x.nome)}</span>
+      <span class="addr">${escapeHTML(x.empresa || x.cargo || '')}</span>
+      <span class="pillrow">
+        ${x.favorito ? `<span class="star">⭐</span>` : ''}
+        ${followUp ? `<span class="pay-dot" style="background:#d03b3b" title="Sem contacto há 90+ dias"></span>` : ''}
+      </span>
+    </div>
+  `;
+}
 
-  branchesEl.querySelectorAll('.contact-row').forEach(row => {
+function attachRowClickHandlers() {
+  branchesEl.querySelectorAll('.contact-row[data-id]').forEach(row => {
     row.addEventListener('click', () => {
       selectedId = row.dataset.id;
       activeTab = 'geral';
       renderAll();
     });
   });
+}
+
+function renderBranches() {
+  if (!contacts.length) {
+    branchesEl.innerHTML = `<div class="empty-state">Ainda não tem contactos.<br>Adicione o primeiro com "+ Novo Contacto".</div>`;
+    return;
+  }
+
+  if (statView === 'aniversarios') { renderBirthdaysView(); return; }
+  if (statView === 'categorias' && activeCategory === 'Todos') { renderCategoryGroups(); return; }
+
+  const filtered = getFiltered();
+  if (!filtered.length) {
+    branchesEl.innerHTML = `<div class="empty-state">Nenhum contacto encontrado para este filtro.</div>`;
+    return;
+  }
+  branchesEl.innerHTML = filtered.map(contactRowHTML).join('');
+  attachRowClickHandlers();
+}
+
+// ---------- View: contacts grouped by category ----------
+function renderCategoryGroups() {
+  const filtered = getFiltered();
+  if (!filtered.length) {
+    branchesEl.innerHTML = `<div class="empty-state">Nenhum contacto encontrado para este filtro.</div>`;
+    return;
+  }
+  const cats = getCategoryList().filter(cat => filtered.some(x => x.categoria === cat));
+  branchesEl.innerHTML = cats.map(cat => {
+    const items = filtered.filter(x => x.categoria === cat);
+    const color = categoryColor(cat);
+    return `
+      <div class="category-group">
+        <button type="button" class="category-group-head" data-cat="${cat}" style="--cat-color:${color}">
+          <span class="cg-dot" style="background:${color}"></span>
+          <span class="cg-name">${cat}</span>
+          <span class="cg-count">${items.length}</span>
+        </button>
+        ${items.map(contactRowHTML).join('')}
+      </div>
+    `;
+  }).join('');
+
+  branchesEl.querySelectorAll('.category-group-head').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeCategory = btn.dataset.cat;
+      selectionSafety();
+      renderAll();
+    });
+  });
+  attachRowClickHandlers();
+}
+
+// ---------- View: birthdays, calendar-style ----------
+function bdayRowHTML(x, days) {
+  const label = days === 0 ? 'Hoje' : days === 1 ? 'Amanhã' : `Daqui a ${days} dias`;
+  return `
+    <div class="contact-row bday-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}">
+      ${avatarHTML(x, 'sm')}
+      <span class="name">${escapeHTML(x.nome)}</span>
+      <span class="addr">${fmtDateNoYear(x.aniversario)}</span>
+      <span class="pillrow"><span class="bday-tag ${days === 0 ? 'today' : ''}">${label}</span></span>
+    </div>
+  `;
+}
+
+function renderBirthdaysView() {
+  const withBday = contacts.filter(x => x.aniversario);
+  const withDays = withBday.map(x => ({ x, days: daysToNextBirthday(x.aniversario) }));
+  const today = withDays.filter(o => o.days === 0);
+  const upcoming = withDays.filter(o => o.days > 0).sort((a, b) => a.days - b.days);
+
+  branchesEl.innerHTML = `
+    <div class="bday-section">
+      <div class="bday-section-title">🎂 Fazem anos hoje</div>
+      ${today.length ? today.map(o => bdayRowHTML(o.x, o.days)).join('') : '<div class="empty-state">Ninguém faz anos hoje.</div>'}
+    </div>
+    <div class="bday-section">
+      <div class="bday-section-title">📅 Próximos aniversários</div>
+      ${upcoming.length ? upcoming.map(o => bdayRowHTML(o.x, o.days)).join('') : '<div class="empty-state">Sem aniversários registados.</div>'}
+    </div>
+  `;
+  attachRowClickHandlers();
 }
 
 // ---------- SVG curves from orb to each contact row ----------
@@ -661,7 +773,7 @@ function handleCSVImport(text) {
     const telefone = get(idx.telefone);
     if (!nome && !email && !telefone) continue;
     if (!nome) nome = email || telefone || 'Sem nome';
-    result.push(c(nome, 'Networking', get(idx.empresa), get(idx.cargo), telefone, email, get(idx.localidade), get(idx.link), '', 'Importado', '', [], false, ''));
+    result.push(c(nome, 'Prospect', get(idx.empresa), get(idx.cargo), telefone, email, get(idx.localidade), get(idx.link), '', 'Importado', '', [], false, ''));
   }
   return result;
 }
@@ -690,7 +802,7 @@ function parseVCards(text) {
     });
     if (!nome && !email && !telefone) return;
     if (!nome) nome = email || telefone || 'Sem nome';
-    result.push(c(nome, 'Networking', empresa, cargo, telefone, email, '', link, aniversario, 'Importado (vCard)', '', [], false, ''));
+    result.push(c(nome, 'Prospect', empresa, cargo, telefone, email, '', link, aniversario, 'Importado (vCard)', '', [], false, ''));
   });
   return result;
 }
