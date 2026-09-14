@@ -40,7 +40,6 @@ const ICONS = {
   trash: '<line x1="4" y1="7" x2="20" y2="7"/><rect x="6" y="7" width="12" height="13" rx="1.5"/><line x1="9" y1="7" x2="9" y2="4"/><line x1="15" y1="7" x2="15" y2="4"/><line x1="9" y1="4" x2="15" y2="4"/><line x1="10" y1="11" x2="10" y2="16"/><line x1="14" y1="11" x2="14" y2="16"/>',
   check: '<polyline points="4,12 9,17 20,5"/>',
   camera: '<rect x="3" y="7" width="18" height="13" rx="2"/><line x1="8" y1="7" x2="9.5" y2="4"/><line x1="9.5" y1="4" x2="14.5" y2="4"/><line x1="14.5" y1="4" x2="16" y2="7"/><circle cx="12" cy="13.5" r="3.3"/>',
-  heart: '<circle cx="8.5" cy="9" r="4.5" fill="currentColor" stroke="none"/><circle cx="15.5" cy="9" r="4.5" fill="currentColor" stroke="none"/><polygon points="4.5,11 19.5,11 12,21" fill="currentColor" stroke="none"/>',
   x: '<line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
   plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
 };
@@ -51,7 +50,6 @@ function icon(name, extraClass) {
 const TAB_DEFS = [
   { key: 'geral', icon: icon('idCard'), lbl: 'Ficha Pessoal' },
   { key: 'fotos', icon: icon('camera'), lbl: 'Fotos' },
-  { key: 'gostos', icon: icon('heart'), lbl: 'Gostos' },
   { key: 'perfil', icon: icon('profile'), lbl: 'Perfil' },
   { key: 'notas', icon: icon('fileText'), lbl: 'Notas' },
   { key: 'historico', icon: icon('activity'), lbl: 'Histórico' },
@@ -77,8 +75,6 @@ const PERFIL_FIELDS = [
   { key: 'idiomas', label: 'Idiomas', type: 'text' },
   { key: 'redesSociais', label: 'Outras redes sociais', type: 'text' },
   { key: 'assistente', label: 'Assistente / Contacto direto', type: 'text' },
-];
-const GOSTOS_FIELDS = [
   { key: 'atividadesFavoritas', label: 'Atividades favoritas', type: 'text' },
   { key: 'pratosFavoritos', label: 'Pratos / comida favorita', type: 'text' },
   { key: 'bebidaFavorita', label: 'Bebida favorita', type: 'text' },
@@ -609,7 +605,6 @@ function tabValuePreview(x, key) {
   switch (key) {
     case 'geral': return '';
     case 'fotos': return (x.fotos || []).length || '—';
-    case 'gostos': return GOSTOS_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'perfil': return PERFIL_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'notas': return (x.tags || []).length ? `${x.tags.length} tag(s)` : (x.notas ? 'Notas' : '—');
     case 'historico': {
@@ -734,7 +729,6 @@ function renderDetail() {
   if (activeTab === 'historico') subpointHTML = renderHistoricoTab(x);
   else if (activeTab === 'rede') subpointHTML = renderRedeTab(x);
   else if (activeTab === 'fotos') subpointHTML = renderFotosTab(x);
-  else if (activeTab === 'gostos') subpointHTML = renderEditableFields(x, GOSTOS_FIELDS);
   else if (activeTab === 'perfil') subpointHTML = renderEditableFields(x, PERFIL_FIELDS);
   else if (activeTab === 'notas') subpointHTML = renderEditableFields(x, NOTAS_FIELDS);
   else {
