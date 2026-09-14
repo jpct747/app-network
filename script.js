@@ -366,7 +366,7 @@ function renderBranches() {
   }
   branchesEl.innerHTML = filtered.map(contactRowHTML).join('');
   attachRowClickHandlers();
-  insertAddNodeAfterSelected();
+  insertConnectionsAfterSelected();
 }
 
 // ---------- View: contacts grouped by category ----------
@@ -400,7 +400,7 @@ function renderCategoryGroups() {
     });
   });
   attachRowClickHandlers();
-  insertAddNodeAfterSelected();
+  insertConnectionsAfterSelected();
 }
 
 // ---------- View: birthdays, calendar-style ----------
@@ -450,35 +450,64 @@ function drawCurves() {
   const originX = orbRect.right - wrapRect.left;
   const originY = orbRect.top + orbRect.height / 2 - wrapRect.top;
 
-  const rows = branchesEl.querySelectorAll('.contact-row');
   let paths = '';
+
+  // Hub -> every real contact row (side tiles connect locally to the selected row instead).
+  const rows = branchesEl.querySelectorAll('.contact-row:not(.side-tile)');
   rows.forEach(row => {
     const r = row.getBoundingClientRect();
     const x2 = r.left - wrapRect.left;
     const y2 = r.top + r.height / 2 - wrapRect.top;
     const midX = originX + (x2 - originX) * 0.55;
-    const isActive = row.dataset.id === selectedId || row.id === 'addNodeRow';
+    const isActive = row.dataset.id === selectedId;
     paths += `<path class="${isActive ? 'active' : ''}" d="M ${originX} ${originY} C ${midX} ${originY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
   });
+
+  // Selected row -> its connected-people tiles + the "add" tile, a short direct wire.
+  const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]:not(.side-tile)`);
+  if (selRow) {
+    const selR = selRow.getBoundingClientRect();
+    const startX = selR.right - wrapRect.left;
+    const startY = selR.top + selR.height / 2 - wrapRect.top;
+    branchesEl.querySelectorAll('.selected-with-add .side-tile').forEach(tile => {
+      const r = tile.getBoundingClientRect();
+      const x2 = r.left - wrapRect.left;
+      const y2 = r.top + r.height / 2 - wrapRect.top;
+      const midX = startX + (x2 - startX) * 0.5;
+      paths += `<path class="active" d="M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
+    });
+  }
+
   svg.innerHTML = paths;
 }
 
-function insertAddNodeAfterSelected() {
+function insertConnectionsAfterSelected() {
   if (!selectedId) return;
-  const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]`);
+  const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]:not(.side-tile)`);
   if (!selRow) return;
+  const x = contacts.find(v => v.id === selectedId);
+  if (!x) return;
 
   const wrap = document.createElement('div');
   wrap.className = 'selected-with-add';
   selRow.parentNode.insertBefore(wrap, selRow);
   wrap.appendChild(selRow);
 
-  const tile = document.createElement('div');
-  tile.className = 'contact-row add-node-row';
-  tile.id = 'addNodeRow';
-  tile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar</span>`;
-  tile.addEventListener('click', () => openModal(null, [selectedId]));
-  wrap.appendChild(tile);
+  const related = (x.relacionados || []).map(id => contacts.find(v => v.id === id)).filter(Boolean);
+  related.forEach(r => {
+    const tile = document.createElement('div');
+    tile.className = 'contact-row side-tile related-side-tile';
+    tile.dataset.id = r.id;
+    tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span>`;
+    tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; renderAll(); });
+    wrap.appendChild(tile);
+  });
+
+  const addTile = document.createElement('div');
+  addTile.className = 'contact-row side-tile add-node-row';
+  addTile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar</span>`;
+  addTile.addEventListener('click', () => openModal(null, [selectedId]));
+  wrap.appendChild(addTile);
 }
 
 // ---------- Detail panel (ficha) ----------
