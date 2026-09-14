@@ -19,11 +19,35 @@ const CATEGORY_PALETTE = [
   '#6f9e5f', '#9c9284',
 ];
 
+// ---------- Line-icon set (no emoji — keeps the UI formal) ----------
+const ICONS = {
+  users: '<circle cx="8" cy="8" r="3"/><rect x="2.5" y="14" width="11" height="7" rx="3.5"/><circle cx="18" cy="9" r="2.3"/><rect x="13.5" y="15" width="9" height="5.5" rx="2.75" opacity="0.55"/>',
+  tag: '<polygon points="12,3 21,9 21,15 12,21 3,15 3,9"/><circle cx="12" cy="12" r="2"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="3" x2="7" y2="7"/><line x1="17" y1="3" x2="17" y2="7"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="7"/><line x1="12" y1="12" x2="16" y2="14"/>',
+  starOutline: '<polygon points="12,2.5 14.9,9 22,9.9 16.8,14.6 18.2,21.5 12,17.9 5.8,21.5 7.2,14.6 2,9.9 9.1,9"/>',
+  starFilled: '<polygon points="12,2.5 14.9,9 22,9.9 16.8,14.6 18.2,21.5 12,17.9 5.8,21.5 7.2,14.6 2,9.9 9.1,9" fill="currentColor"/>',
+  idCard: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8.5" cy="12" r="2.3"/><line x1="13.5" y1="9.5" x2="18.5" y2="9.5"/><line x1="13.5" y1="13" x2="18.5" y2="13"/><line x1="5" y1="16.5" x2="12" y2="16.5"/>',
+  fileText: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><line x1="7.5" y1="8" x2="16.5" y2="8"/><line x1="7.5" y1="12" x2="16.5" y2="12"/><line x1="7.5" y1="16" x2="13" y2="16"/>',
+  activity: '<polyline points="3,17 9,10 13,14 21,5"/><circle cx="21" cy="5" r="1.6" fill="currentColor" stroke="none"/>',
+  link: '<circle cx="7" cy="17" r="3.2"/><circle cx="17" cy="7" r="3.2"/><line x1="9.3" y1="14.7" x2="14.7" y2="9.3"/>',
+  sparkle: '<polygon points="12,2 14,10 22,12 14,14 12,22 10,14 2,12 10,10"/>',
+  phone: '<rect x="7" y="2" width="10" height="20" rx="2.5"/><line x1="10" y1="18.5" x2="14" y2="18.5"/>',
+  mail: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><polyline points="3,6 12,13 21,6"/>',
+  download: '<line x1="12" y1="3" x2="12" y2="14"/><polyline points="7,10 12,15 17,10"/><line x1="4" y1="19" x2="20" y2="19"/>',
+  edit: '<line x1="4" y1="20" x2="15" y2="9"/><polygon points="15,9 18,6 21,9 18,12"/><line x1="3" y1="21" x2="5" y2="19"/>',
+  trash: '<line x1="4" y1="7" x2="20" y2="7"/><rect x="6" y="7" width="12" height="13" rx="1.5"/><line x1="9" y1="7" x2="9" y2="4"/><line x1="15" y1="7" x2="15" y2="4"/><line x1="9" y1="4" x2="15" y2="4"/><line x1="10" y1="11" x2="10" y2="16"/><line x1="14" y1="11" x2="14" y2="16"/>',
+  check: '<polyline points="4,12 9,17 20,5"/>',
+};
+function icon(name, extraClass) {
+  return `<svg class="svg-icon${extraClass ? ' ' + extraClass : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
+}
+
 const TAB_DEFS = [
-  { key: 'geral', icon: '📇', lbl: 'Geral' },
-  { key: 'notas', icon: '📝', lbl: 'Notas' },
-  { key: 'historico', icon: '📈', lbl: 'Histórico' },
-  { key: 'rede', icon: '🔗', lbl: 'Rede' },
+  { key: 'geral', icon: icon('idCard'), lbl: 'Geral' },
+  { key: 'notas', icon: icon('fileText'), lbl: 'Notas' },
+  { key: 'historico', icon: icon('activity'), lbl: 'Histórico' },
+  { key: 'rede', icon: icon('link'), lbl: 'Rede' },
 ];
 
 // ---------- Date helpers ----------
@@ -267,11 +291,11 @@ function computeStats() {
 function renderStatCards() {
   const s = computeStats();
   const cards = [
-    { icon: '👥', num: s.total, lbl: 'Contactos', view: 'todos' },
-    { icon: '🏷️', num: s.categorias, lbl: 'Categorias', view: 'categorias' },
-    { icon: '🎂', num: s.aniversarios, lbl: 'Aniversários (30d)', view: 'aniversarios' },
-    { icon: '⏰', num: s.semContacto, lbl: 'Follow-up (90d+)', view: 'followup', warn: s.semContacto > 0 },
-    { icon: '⭐', num: s.favoritos, lbl: 'Favoritos', view: 'favoritos' },
+    { icon: icon('users'), num: s.total, lbl: 'Contactos', view: 'todos' },
+    { icon: icon('tag'), num: s.categorias, lbl: 'Categorias', view: 'categorias' },
+    { icon: icon('calendar'), num: s.aniversarios, lbl: 'Aniversários (30d)', view: 'aniversarios' },
+    { icon: icon('clock'), num: s.semContacto, lbl: 'Follow-up (90d+)', view: 'followup', warn: s.semContacto > 0 },
+    { icon: icon('starFilled'), num: s.favoritos, lbl: 'Favoritos', view: 'favoritos' },
   ];
   document.getElementById('statCards').innerHTML = cards.map(cd => `
     <button type="button" class="stat-card ${cd.view === statView ? 'active' : ''} ${cd.warn ? 'warn' : ''}" data-view="${cd.view}">
@@ -328,12 +352,12 @@ function selectionSafety() {
 function contactRowHTML(x) {
   const followUp = daysBetween(lastContactDate(x) || x.criadoEm) >= 90;
   return `
-    <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}">
+    <div class="contact-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}" style="border-left-color:${categoryColor(x.categoria)}">
       ${avatarHTML(x, 'sm')}
       <span class="name">${escapeHTML(x.nome)}</span>
       <span class="addr">${escapeHTML(x.empresa || x.cargo || '')}</span>
       <span class="pillrow">
-        ${x.favorito ? `<span class="star">⭐</span>` : ''}
+        ${x.favorito ? `<span class="star">${icon('starFilled')}</span>` : ''}
         ${followUp ? `<span class="pay-dot" style="background:#d03b3b" title="Sem contacto há 90+ dias"></span>` : ''}
       </span>
     </div>
@@ -407,7 +431,7 @@ function renderCategoryGroups() {
 function bdayRowHTML(x, days) {
   const label = days === 0 ? 'Hoje' : days === 1 ? 'Amanhã' : `Daqui a ${days} dias`;
   return `
-    <div class="contact-row bday-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}">
+    <div class="contact-row bday-row ${x.id === selectedId ? 'selected' : ''}" data-id="${x.id}" style="border-left-color:${categoryColor(x.categoria)}">
       ${avatarHTML(x, 'sm')}
       <span class="name">${escapeHTML(x.nome)}</span>
       <span class="addr">${fmtDateNoYear(x.aniversario)}</span>
@@ -424,11 +448,11 @@ function renderBirthdaysView() {
 
   branchesEl.innerHTML = `
     <div class="bday-section">
-      <div class="bday-section-title">🎂 Fazem anos hoje</div>
+      <div class="bday-section-title">${icon('calendar')} Fazem anos hoje</div>
       ${today.length ? today.map(o => bdayRowHTML(o.x, o.days)).join('') : '<div class="empty-state">Ninguém faz anos hoje.</div>'}
     </div>
     <div class="bday-section">
-      <div class="bday-section-title">📅 Próximos aniversários</div>
+      <div class="bday-section-title">${icon('calendar')} Próximos aniversários</div>
       ${upcoming.length ? upcoming.map(o => bdayRowHTML(o.x, o.days)).join('') : '<div class="empty-state">Sem aniversários registados.</div>'}
     </div>
   `;
@@ -498,6 +522,7 @@ function insertConnectionsAfterSelected() {
     const tile = document.createElement('div');
     tile.className = 'contact-row side-tile related-side-tile';
     tile.dataset.id = r.id;
+    tile.style.borderLeftColor = categoryColor(r.categoria);
     tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span>`;
     tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; renderAll(); });
     wrap.appendChild(tile);
@@ -551,7 +576,7 @@ function renderHistoricoTab(x) {
   return `
     <div class="kv-row"><span class="k">Último contacto</span><span class="v">${last ? `${fmtDate(last)} (${dias}d)` : 'Sem registo'}</span></div>
     <div class="kv-row"><span class="k">Contacto adicionado em</span><span class="v">${fmtDate(x.criadoEm)}</span></div>
-    <button type="button" class="btn-ghost" id="logContactBtn" style="margin:10px 0;">✅ Registar contacto hoje</button>
+    <button type="button" class="btn-ghost" id="logContactBtn" style="margin:10px 0;">${icon('check')} Registar contacto hoje</button>
     <div class="timeline">
       ${interacoes.length ? interacoes.map(i => `
         <div class="timeline-item">
@@ -604,7 +629,7 @@ function suggestion(x) {
   const bday = daysToNextBirthday(x.aniversario);
 
   if (x.aniversario && bday <= 14) {
-    return { title: 'Aniversário a chegar 🎂', text: `O aniversário de ${firstName} é daqui a ${bday} dia(s). Uma mensagem a felicitar é uma ótima forma de manter a relação viva.` };
+    return { title: 'Aniversário a chegar', text: `O aniversário de ${firstName} é daqui a ${bday} dia(s). Uma mensagem a felicitar é uma ótima forma de manter a relação viva.` };
   }
   if (daysSince >= 180) {
     return { title: 'Contacto a esfriar', text: `Já não fala com ${firstName} há mais de 6 meses (${daysSince} dias). Talvez valha a pena reatar antes que se perca de vez.` };
@@ -615,13 +640,13 @@ function suggestion(x) {
   if (x.favorito && daysSince >= 30) {
     return { title: 'Favorito a precisar de atenção', text: `${firstName} é um contacto favorito, mas já não falam há ${daysSince} dias. Vale a pena um follow-up.` };
   }
-  return { title: 'Relação em dia ✓', text: `Interação recente (${lastContactDate(x) ? daysSince + ' dias' : 'contacto novo'}). Continue a nutrir esta relação.` };
+  return { title: 'Relação em dia', text: `Interação recente (${lastContactDate(x) ? daysSince + ' dias' : 'contacto novo'}). Continue a nutrir esta relação.` };
 }
 
 function renderDetail() {
   if (!contacts.length) {
     detailEl.innerHTML = `
-      <div class="d-head">🤝 &nbsp;Rede de Contactos</div>
+      <div class="d-head">${icon('users')} &nbsp;Rede de Contactos</div>
       <div class="empty-state">Sem contactos ainda.<br>Comece por adicionar o primeiro.</div>
       <button type="button" class="btn-primary" id="emptyAddBtn">+ Novo Contacto</button>
     `;
@@ -641,12 +666,12 @@ function renderDetail() {
       <div class="kv-row"><span class="k">${k}</span><span class="v">${escapeHTML(String(v))}</span></div>
     `).join('');
     if (activeTab === 'geral' && x.aniversario) {
-      subpointHTML += `<button type="button" class="btn-ghost" id="addBdayIcsBtn" style="margin-top:8px;">📅 Adicionar aniversário ao calendário</button>`;
+      subpointHTML += `<button type="button" class="btn-ghost" id="addBdayIcsBtn" style="margin-top:8px;">${icon('calendar')} Adicionar aniversário ao calendário</button>`;
     }
   }
 
   detailEl.innerHTML = `
-    <div class="d-head">🤝 &nbsp;Ficha de Contacto</div>
+    <div class="d-head">${icon('idCard')} &nbsp;Ficha de Contacto</div>
 
     <div class="d-profile-row">
       ${avatarHTML(x, 'lg')}
@@ -661,20 +686,20 @@ function renderDetail() {
         <span class="dot" style="width:6px;height:6px;border-radius:50%;background:${catColor};"></span>
         ${escapeHTML(x.categoria || 'Sem categoria')}
       </span>
-      <button type="button" class="star-toggle ${x.favorito ? 'on' : ''}" id="favToggleBtn" title="Marcar/desmarcar favorito">${x.favorito ? '⭐' : '☆'}</button>
+      <button type="button" class="star-toggle ${x.favorito ? 'on' : ''}" id="favToggleBtn" title="Marcar/desmarcar favorito">${x.favorito ? icon('starFilled') : icon('starOutline')}</button>
     </div>
 
     <div class="d-meta-row">
-      <div class="d-meta-text">${x.telefone ? `📞 <b>${escapeHTML(x.telefone)}</b>` : 'Sem telefone registado'}</div>
-      <div class="d-meta-text">${x.email ? `✉️ <b>${escapeHTML(x.email)}</b>` : ''}</div>
+      <div class="d-meta-text">${x.telefone ? `${icon('phone')} <b>${escapeHTML(x.telefone)}</b>` : 'Sem telefone registado'}</div>
+      <div class="d-meta-text">${x.email ? `${icon('mail')} <b>${escapeHTML(x.email)}</b>` : ''}</div>
     </div>
 
     <div class="detail-actions">
-      ${x.telefone ? `<a class="btn-ghost" href="tel:${encodeURIComponent(x.telefone)}">📞 Ligar</a>` : ''}
-      ${x.email ? `<a class="btn-ghost" href="mailto:${encodeURIComponent(x.email)}">✉️ Email</a>` : ''}
-      <button type="button" class="btn-ghost" id="saveVcfBtn">📇 Guardar (.vcf)</button>
-      <button type="button" class="btn-ghost" id="editBtn">✏️ Editar</button>
-      <button type="button" class="btn-ghost btn-danger" id="deleteBtn">🗑️ Eliminar</button>
+      ${x.telefone ? `<a class="btn-ghost" href="tel:${encodeURIComponent(x.telefone)}">${icon('phone')} Ligar</a>` : ''}
+      ${x.email ? `<a class="btn-ghost" href="mailto:${encodeURIComponent(x.email)}">${icon('mail')} Email</a>` : ''}
+      <button type="button" class="btn-ghost" id="saveVcfBtn">${icon('download')} Guardar (.vcf)</button>
+      <button type="button" class="btn-ghost" id="editBtn">${icon('edit')} Editar</button>
+      <button type="button" class="btn-ghost btn-danger" id="deleteBtn">${icon('trash')} Eliminar</button>
     </div>
 
     <div class="subpoint-tabs" id="subpointTabs">
@@ -692,7 +717,7 @@ function renderDetail() {
     </div>
 
     <div class="card ai-box">
-      <div class="ai-head">💡 Sugestão</div>
+      <div class="ai-head">${icon('sparkle')} Sugestão</div>
       <div class="ai-title">${ai.title}</div>
       <div class="ai-text">${ai.text}</div>
     </div>
@@ -1187,7 +1212,7 @@ backupImportInput.addEventListener('change', () => {
 function refreshNotifStatus() {
   const el = document.getElementById('notifStatus');
   if (!('Notification' in window)) { el.textContent = 'Não suportado neste browser'; return; }
-  const map = { granted: 'Ativas ✓', denied: 'Bloqueadas pelo browser', default: 'Ainda não ativadas' };
+  const map = { granted: 'Ativas', denied: 'Bloqueadas pelo browser', default: 'Ainda não ativadas' };
   el.textContent = map[Notification.permission];
 }
 document.getElementById('enableNotifBtn').addEventListener('click', async () => {
