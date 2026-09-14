@@ -28,6 +28,7 @@ const ICONS = {
   starOutline: '<polygon points="12,2.5 14.9,9 22,9.9 16.8,14.6 18.2,21.5 12,17.9 5.8,21.5 7.2,14.6 2,9.9 9.1,9"/>',
   starFilled: '<polygon points="12,2.5 14.9,9 22,9.9 16.8,14.6 18.2,21.5 12,17.9 5.8,21.5 7.2,14.6 2,9.9 9.1,9" fill="currentColor"/>',
   idCard: '<rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8.5" cy="12" r="2.3"/><line x1="13.5" y1="9.5" x2="18.5" y2="9.5"/><line x1="13.5" y1="13" x2="18.5" y2="13"/><line x1="5" y1="16.5" x2="12" y2="16.5"/>',
+  profile: '<circle cx="12" cy="8" r="3.2"/><path d="M5 20a7 7 0 0 1 14 0"/>',
   fileText: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><line x1="7.5" y1="8" x2="16.5" y2="8"/><line x1="7.5" y1="12" x2="16.5" y2="12"/><line x1="7.5" y1="16" x2="13" y2="16"/>',
   activity: '<polyline points="3,17 9,10 13,14 21,5"/><circle cx="21" cy="5" r="1.6" fill="currentColor" stroke="none"/>',
   link: '<circle cx="7" cy="17" r="3.2"/><circle cx="17" cy="7" r="3.2"/><line x1="9.3" y1="14.7" x2="14.7" y2="9.3"/>',
@@ -45,9 +46,33 @@ function icon(name, extraClass) {
 
 const TAB_DEFS = [
   { key: 'geral', icon: icon('idCard'), lbl: 'Geral' },
+  { key: 'perfil', icon: icon('profile'), lbl: 'Perfil' },
   { key: 'notas', icon: icon('fileText'), lbl: 'Notas' },
   { key: 'historico', icon: icon('activity'), lbl: 'Histórico' },
   { key: 'rede', icon: icon('link'), lbl: 'Rede' },
+];
+
+// ---------- Editable field definitions (kv-rows the user can type into directly) ----------
+const GERAL_FIELDS = [
+  { key: 'telefone', label: 'Telefone', type: 'tel' },
+  { key: 'email', label: 'Email', type: 'email' },
+  { key: 'localidade', label: 'Localidade', type: 'text' },
+  { key: 'link', label: 'LinkedIn / Website', type: 'text' },
+  { key: 'aniversario', label: 'Aniversário', type: 'date' },
+];
+const NOTAS_FIELDS = [
+  { key: 'comoConhecemos', label: 'Como nos conhecemos', type: 'text' },
+  { key: 'notas', label: 'Notas pessoais', type: 'textarea' },
+  { key: 'tags', label: 'Tags (separadas por vírgula)', type: 'text', isTags: true },
+];
+const PERFIL_FIELDS = [
+  { key: 'familia', label: 'Família / Cônjuge e filhos', type: 'text' },
+  { key: 'hobbies', label: 'Hobbies & Interesses', type: 'text' },
+  { key: 'formacao', label: 'Formação / Educação', type: 'text' },
+  { key: 'idiomas', label: 'Idiomas', type: 'text' },
+  { key: 'redesSociais', label: 'Outras redes sociais', type: 'text' },
+  { key: 'assistente', label: 'Assistente / Contacto direto', type: 'text' },
+  { key: 'preferencias', label: 'Preferências pessoais (para lembrar em reuniões)', type: 'textarea' },
 ];
 
 // ---------- Date helpers ----------
@@ -571,6 +596,7 @@ const detailEl = document.getElementById('detail');
 function tabValuePreview(x, key) {
   switch (key) {
     case 'geral': return x.telefone || x.email || '—';
+    case 'perfil': return PERFIL_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'notas': return (x.tags || []).length ? `${x.tags.length} tag(s)` : (x.notas ? 'Notas' : '—');
     case 'historico': {
       const last = lastContactDate(x);
@@ -580,23 +606,25 @@ function tabValuePreview(x, key) {
   }
 }
 
-function tabRows(x, key) {
-  switch (key) {
-    case 'geral':
-      return [
-        ['Telefone', x.telefone || '—'],
-        ['Email', x.email || '—'],
-        ['Localidade', x.localidade || '—'],
-        ['LinkedIn / Website', x.link || '—'],
-        ['Aniversário', x.aniversario ? fmtDateNoYear(x.aniversario) : '—'],
-      ];
-    case 'notas':
-      return [
-        ['Como nos conhecemos', x.comoConhecemos || '—'],
-        ['Notas pessoais', x.notas || '—'],
-        ['Tags', (x.tags || []).length ? x.tags.join(', ') : '—'],
-      ];
-  }
+function renderEditableFields(x, fields) {
+  return fields.map(f => {
+    const value = f.isTags ? (x.tags || []).join(', ') : (x[f.key] || '');
+    const attrs = `class="kv-input" data-field="${f.key}"${f.isTags ? ' data-tags="1"' : ''}`;
+    if (f.type === 'textarea') {
+      return `
+        <div class="kv-row kv-editable kv-stack">
+          <span class="k">${f.label}</span>
+          <textarea ${attrs} rows="2" placeholder="Escreva aqui…">${escapeHTML(value)}</textarea>
+        </div>
+      `;
+    }
+    return `
+      <div class="kv-row kv-editable">
+        <span class="k">${f.label}</span>
+        <input ${attrs} type="${f.type}" value="${escapeHTML(value)}" placeholder="—">
+      </div>
+    `;
+  }).join('');
 }
 
 function renderHistoricoTab(x) {
@@ -691,11 +719,11 @@ function renderDetail() {
   let subpointHTML;
   if (activeTab === 'historico') subpointHTML = renderHistoricoTab(x);
   else if (activeTab === 'rede') subpointHTML = renderRedeTab(x);
+  else if (activeTab === 'perfil') subpointHTML = renderEditableFields(x, PERFIL_FIELDS);
+  else if (activeTab === 'notas') subpointHTML = renderEditableFields(x, NOTAS_FIELDS);
   else {
-    subpointHTML = tabRows(x, activeTab).map(([k, v]) => `
-      <div class="kv-row"><span class="k">${k}</span><span class="v">${escapeHTML(String(v))}</span></div>
-    `).join('');
-    if (activeTab === 'geral' && x.aniversario) {
+    subpointHTML = renderEditableFields(x, GERAL_FIELDS);
+    if (x.aniversario) {
       subpointHTML += `<button type="button" class="btn-ghost" id="addBdayIcsBtn" style="margin-top:8px;">${icon('calendar')} Adicionar aniversário ao calendário</button>`;
     }
   }
@@ -705,8 +733,8 @@ function renderDetail() {
 
     <div class="d-profile-row">
       ${avatarHTML(x, 'lg')}
-      <div>
-        <div class="d-title">${escapeHTML(x.nome)}</div>
+      <div class="d-profile-text">
+        <div class="d-title" contenteditable="true" spellcheck="false" id="nomeEditable">${escapeHTML(x.nome)}</div>
         <div class="d-addr">${escapeHTML(x.cargo || '')}${x.cargo && x.empresa ? ' @ ' : ''}${escapeHTML(x.empresa || '')}</div>
       </div>
     </div>
@@ -1148,6 +1176,34 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
   searchTerm = e.target.value;
   focusMode = false;
   selectionSafety();
+  renderAll();
+});
+
+// ---------- Inline editing in the detail panel (ficha) ----------
+detailEl.addEventListener('change', (e) => {
+  const el = e.target;
+  if (!el.classList.contains('kv-input')) return;
+  const idx = contacts.findIndex(v => v.id === selectedId);
+  if (idx === -1) return;
+  pushUndoSnapshot();
+  if (el.dataset.tags) {
+    contacts[idx].tags = el.value.split(',').map(t => t.trim()).filter(Boolean);
+  } else {
+    contacts[idx][el.dataset.field] = el.value.trim();
+  }
+  saveContacts(contacts);
+  renderAll();
+});
+
+detailEl.addEventListener('focusout', (e) => {
+  if (e.target.id !== 'nomeEditable') return;
+  const idx = contacts.findIndex(v => v.id === selectedId);
+  if (idx === -1) return;
+  const newName = e.target.textContent.trim();
+  if (!newName || newName === contacts[idx].nome) { e.target.textContent = contacts[idx].nome; return; }
+  pushUndoSnapshot();
+  contacts[idx].nome = newName;
+  saveContacts(contacts);
   renderAll();
 });
 
