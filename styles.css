@@ -1,16 +1,16 @@
 :root {
   color-scheme: dark;
 
-  /* chrome — deep navy, boardroom-quiet */
-  --page-plane: #060c1a;
-  --surface-1: #0e1730;
-  --surface-2: #15213f;
+  /* chrome — black ground, boardroom-quiet */
+  --page-plane: #000000;
+  --surface-1: #0c0e13;
+  --surface-2: #14171f;
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.18);
 
   --text-primary: #f5f7fb;
-  --text-secondary: #a9b4cc;
-  --text-muted: #6c7893;
+  --text-secondary: #a7adba;
+  --text-muted: #6b7180;
 
   --accent: #5586e6;
   --accent-soft: rgba(85,134,230,0.16);
@@ -54,8 +54,8 @@ html, body {
 
 body {
   background:
-    radial-gradient(ellipse 900px 700px at 8% 30%, rgba(50,88,168,0.16), transparent 60%),
-    radial-gradient(ellipse 1100px 900px at 100% 50%, rgba(24,40,80,0.14), transparent 65%),
+    radial-gradient(ellipse 900px 700px at 8% 30%, rgba(50,88,168,0.12), transparent 60%),
+    radial-gradient(ellipse 1100px 900px at 100% 50%, rgba(24,40,80,0.1), transparent 65%),
     var(--page-plane);
   min-height: 100vh;
 }
