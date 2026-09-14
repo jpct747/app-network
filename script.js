@@ -607,7 +607,7 @@ const detailEl = document.getElementById('detail');
 
 function tabValuePreview(x, key) {
   switch (key) {
-    case 'geral': return x.telefone || x.email || '—';
+    case 'geral': return '';
     case 'fotos': return (x.fotos || []).length || '—';
     case 'gostos': return GOSTOS_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
     case 'perfil': return PERFIL_FIELDS.some(f => x[f.key]) ? 'Preenchido' : '—';
