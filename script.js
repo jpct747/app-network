@@ -175,6 +175,7 @@ let selectedId = contacts[0] ? contacts[0].id : null;
 let searchTerm = '';
 let activeCategory = 'Todos';
 let statView = 'todos'; // 'todos' | 'categorias' | 'aniversarios' | 'followup' | 'favoritos'
+let focusMode = false; // true = branches panel shows only the selected contact + its connections
 let activeTab = 'geral';
 let editingId = null;
 let currentPhotoData = null;
@@ -274,6 +275,7 @@ function setStatView(view) {
   statView = view;
   activeCategory = 'Todos';
   searchTerm = '';
+  focusMode = false;
   document.getElementById('searchInput').value = '';
   selectionSafety();
   renderAll();
@@ -332,6 +334,7 @@ function renderChips() {
   chipsRow.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
+      focusMode = false;
       selectionSafety();
       renderAll();
     });
@@ -380,6 +383,7 @@ function renderBranches() {
     return;
   }
 
+  if (focusMode && selectedId && contacts.some(v => v.id === selectedId)) { renderFocusedView(); return; }
   if (statView === 'aniversarios') { renderBirthdaysView(); return; }
   if (statView === 'categorias' && activeCategory === 'Todos') { renderCategoryGroups(); return; }
 
@@ -389,6 +393,23 @@ function renderBranches() {
     return;
   }
   branchesEl.innerHTML = filtered.map(contactRowHTML).join('');
+  attachRowClickHandlers();
+  insertConnectionsAfterSelected();
+}
+
+// ---------- View: a single contact isolated with its connections ----------
+function renderFocusedView() {
+  branchesEl.innerHTML = `
+    <button type="button" class="back-to-all" id="backToAllBtn">
+      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>
+      Ver todos os contactos
+    </button>
+    ${contactRowHTML(contacts.find(v => v.id === selectedId))}
+  `;
+  document.getElementById('backToAllBtn').addEventListener('click', () => {
+    focusMode = false;
+    renderAll();
+  });
   attachRowClickHandlers();
   insertConnectionsAfterSelected();
 }
@@ -419,6 +440,7 @@ function renderCategoryGroups() {
   branchesEl.querySelectorAll('.category-group-head').forEach(btn => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
+      focusMode = false;
       selectionSafety();
       renderAll();
     });
@@ -515,7 +537,15 @@ function insertConnectionsAfterSelected() {
   const wrap = document.createElement('div');
   wrap.className = 'selected-with-add';
   selRow.parentNode.insertBefore(wrap, selRow);
-  wrap.appendChild(selRow);
+
+  const main = document.createElement('div');
+  main.className = 'swa-main';
+  main.appendChild(selRow);
+  wrap.appendChild(main);
+
+  const stack = document.createElement('div');
+  stack.className = 'swa-connections';
+  wrap.appendChild(stack);
 
   const related = (x.relacionados || []).map(id => contacts.find(v => v.id === id)).filter(Boolean);
   related.forEach(r => {
@@ -524,15 +554,15 @@ function insertConnectionsAfterSelected() {
     tile.dataset.id = r.id;
     tile.style.borderLeftColor = categoryColor(r.categoria);
     tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span>`;
-    tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; renderAll(); });
-    wrap.appendChild(tile);
+    tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; focusMode = true; renderAll(); });
+    stack.appendChild(tile);
   });
 
   const addTile = document.createElement('div');
   addTile.className = 'contact-row side-tile add-node-row';
   addTile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar</span>`;
   addTile.addEventListener('click', () => openModal(null, [selectedId]));
-  wrap.appendChild(addTile);
+  stack.appendChild(addTile);
 }
 
 // ---------- Detail panel (ficha) ----------
@@ -1116,6 +1146,7 @@ contactForm.addEventListener('submit', (e) => {
 // ---------- Search ----------
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchTerm = e.target.value;
+  focusMode = false;
   selectionSafety();
   renderAll();
 });

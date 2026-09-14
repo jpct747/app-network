@@ -44,14 +44,14 @@
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
   background: var(--surface-1);
   border: 1px solid var(--border-strong);
-  color: var(--text-primary);
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 12.5px;
-  font-weight: 700;
+  color: var(--text-secondary);
+  border-radius: 10px;
+  font-size: 15px;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }
@@ -434,9 +434,32 @@ body {
 .selected-with-add {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 26px;
+  gap: 34px;
 }
+
+.swa-main { flex-shrink: 0; }
+
+.swa-connections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.back-to-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 4px;
+}
+.back-to-all:hover { color: var(--wire-active); }
 
 .add-node-row {
   border-style: dashed;
