@@ -204,11 +204,11 @@ function saveContacts(list) {
 
 // ---------- State ----------
 let contacts = loadContacts();
-let selectedId = contacts[0] ? contacts[0].id : null;
+let selectedId = contacts[0] ? contacts[0].id : null; // anchors the web/branches layout (the "hub" row)
+let detailId = null; // overrides which contact's ficha shows, without moving the web anchor
 let searchTerm = '';
 let activeCategory = 'Todos';
 let statView = 'todos'; // 'todos' | 'categorias' | 'aniversarios' | 'followup' | 'favoritos'
-let focusMode = false; // true = branches panel shows only the selected contact + its connections
 let lastAddedId = null; // id of the most recently created contact, briefly highlighted in the list
 let activeTab = 'geral';
 let editingId = null;
@@ -308,7 +308,6 @@ function getFiltered() {
 function setStatView(view) {
   statView = view;
   searchTerm = '';
-  focusMode = false;
   document.getElementById('searchInput').value = '';
   selectionSafety();
   renderAll();
@@ -360,6 +359,7 @@ function renderChips() {
 const branchesEl = document.getElementById('branches');
 
 function selectionSafety() {
+  detailId = null;
   const filtered = getFiltered();
   if (filtered.length && !filtered.some(x => x.id === selectedId)) {
     selectedId = filtered[0].id;
@@ -387,6 +387,7 @@ function attachRowClickHandlers() {
   branchesEl.querySelectorAll('.contact-row[data-id]').forEach(row => {
     row.addEventListener('click', () => {
       selectedId = row.dataset.id;
+      detailId = null;
       activeTab = 'geral';
       renderAll();
     });
@@ -399,7 +400,6 @@ function renderBranches() {
     return;
   }
 
-  if (focusMode && selectedId && contacts.some(v => v.id === selectedId)) { renderFocusedView(); return; }
   if (statView === 'aniversarios') { renderBirthdaysView(); return; }
   if (statView === 'categorias' && activeCategory === 'Todos') { renderCategoryGroups(); return; }
 
@@ -409,23 +409,6 @@ function renderBranches() {
     return;
   }
   branchesEl.innerHTML = filtered.map((x, i) => contactRowHTML(x, i)).join('');
-  attachRowClickHandlers();
-  insertConnectionsAfterSelected();
-}
-
-// ---------- View: a single contact isolated with its connections ----------
-function renderFocusedView() {
-  branchesEl.innerHTML = `
-    <button type="button" class="back-to-all" id="backToAllBtn">
-      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>
-      Ver todos os contactos
-    </button>
-    ${contactRowHTML(contacts.find(v => v.id === selectedId))}
-  `;
-  document.getElementById('backToAllBtn').addEventListener('click', () => {
-    focusMode = false;
-    renderAll();
-  });
   attachRowClickHandlers();
   insertConnectionsAfterSelected();
 }
@@ -456,7 +439,6 @@ function renderCategoryGroups() {
   branchesEl.querySelectorAll('.category-group-head').forEach(btn => {
     btn.addEventListener('click', () => {
       activeCategory = btn.dataset.cat;
-      focusMode = false;
       selectionSafety();
       renderAll();
     });
@@ -551,7 +533,7 @@ function buildRelatedTile(r, parentId) {
   tile.dataset.parentTile = parentId;
   tile.style.borderLeftColor = categoryColor(r.categoria);
   tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span><button type="button" class="side-tile-add" title="Adicionar contacto ligado a ${escapeHTML(r.nome)}">+</button>`;
-  tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; focusMode = true; renderAll(); });
+  tile.addEventListener('click', () => { detailId = r.id; activeTab = 'geral'; renderDetail(); });
   tile.querySelector('.side-tile-add').addEventListener('click', (e) => {
     e.stopPropagation();
     openModal(null, [r.id]);
@@ -735,7 +717,7 @@ function renderDetail() {
     return;
   }
 
-  const x = contacts.find(v => v.id === selectedId) || contacts[0];
+  const x = contacts.find(v => v.id === (detailId || selectedId)) || contacts[0];
   const ai = suggestion(x);
   const catColor = categoryColor(x.categoria);
 
@@ -1258,6 +1240,7 @@ contactForm.addEventListener('submit', (e) => {
   };
 
   pushUndoSnapshot();
+  detailId = null;
   const oldRelatedIds = editingId ? [...((contacts.find(v => v.id === editingId) || {}).relacionados || [])] : [];
   let finalId;
   if (editingId) {
@@ -1283,7 +1266,6 @@ contactForm.addEventListener('submit', (e) => {
 // ---------- Search ----------
 document.getElementById('searchInput').addEventListener('input', (e) => {
   searchTerm = e.target.value;
-  focusMode = false;
   selectionSafety();
   renderAll();
 });
@@ -1292,7 +1274,7 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
 detailEl.addEventListener('change', (e) => {
   const el = e.target;
   if (!el.classList.contains('kv-input')) return;
-  const idx = contacts.findIndex(v => v.id === selectedId);
+  const idx = contacts.findIndex(v => v.id === (detailId || selectedId));
   if (idx === -1) return;
   pushUndoSnapshot();
   if (el.dataset.tags) {
@@ -1306,7 +1288,7 @@ detailEl.addEventListener('change', (e) => {
 
 detailEl.addEventListener('focusout', (e) => {
   if (e.target.id !== 'nomeEditable') return;
-  const idx = contacts.findIndex(v => v.id === selectedId);
+  const idx = contacts.findIndex(v => v.id === (detailId || selectedId));
   if (idx === -1) return;
   const newName = e.target.textContent.trim();
   if (!newName || newName === contacts[idx].nome) { e.target.textContent = contacts[idx].nome; return; }
@@ -1533,7 +1515,6 @@ function renderLanding() {
 function enterAppForCategory(cat) {
   activeCategory = cat;
   statView = 'todos';
-  focusMode = false;
   searchTerm = '';
   document.getElementById('searchInput').value = '';
   selectionSafety();

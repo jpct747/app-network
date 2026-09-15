@@ -653,22 +653,6 @@ body:not(.landing-active) .landing-screen { display: none; }
 .second-degree-tile .avatar-sm { width: 20px; height: 20px; font-size: 9px; }
 .second-degree-tile .side-tile-add { width: 17px; height: 17px; font-size: 10px; }
 
-.back-to-all {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 4px 0;
-  margin-bottom: 4px;
-}
-.back-to-all:hover { color: var(--wire-active); }
-
 .add-node-row {
   border-style: dashed;
   border-color: var(--border-strong);
