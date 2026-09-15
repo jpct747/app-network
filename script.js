@@ -237,10 +237,42 @@ function undoLast() {
 document.getElementById('undoBtn').addEventListener('click', undoLast);
 
 // ---------- Category helpers ----------
+const CATEGORY_LIST_KEY = 'rede_contactos_categories_v1';
+function loadCategoryList() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CATEGORY_LIST_KEY));
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch (e) {}
+  return [...DEFAULT_CATEGORIES];
+}
+let baseCategoryList = loadCategoryList();
+function saveCategoryList() {
+  localStorage.setItem(CATEGORY_LIST_KEY, JSON.stringify(baseCategoryList));
+}
+
 function getCategoryList() {
-  const set = new Set(DEFAULT_CATEGORIES);
+  const set = new Set(baseCategoryList);
   contacts.forEach(x => { if (x.categoria) set.add(x.categoria); });
   return Array.from(set);
+}
+
+function addCategory(name) {
+  name = name.trim();
+  if (!name || baseCategoryList.some(c => norm(c) === norm(name))) return false;
+  baseCategoryList.push(name);
+  saveCategoryList();
+  return true;
+}
+
+function removeCategory(name) {
+  const count = contacts.filter(c => c.categoria === name).length;
+  if (count > 0) {
+    alert(`Não pode remover "${name}" enquanto tiver contactos nessa categoria (${count}). Mude-os de categoria primeiro.`);
+    return false;
+  }
+  baseCategoryList = baseCategoryList.filter(c => c !== name);
+  saveCategoryList();
+  return true;
 }
 function categoryColor(cat) {
   const list = getCategoryList();
@@ -1457,6 +1489,8 @@ densityBtn.addEventListener('click', () => {
 });
 
 // ---------- Landing screen: a category index before entering the network ----------
+let landingEditMode = false;
+
 function renderLanding() {
   const statsEl = document.getElementById('landingStats');
   const indexEl = document.getElementById('landingIndex');
@@ -1469,7 +1503,9 @@ function renderLanding() {
     <div><b>${String(followUp).padStart(2, '0')}</b><span>Follow-up</span></div>
   `;
 
-  indexEl.innerHTML = cats.map((cat, i) => {
+  indexEl.classList.toggle('editing', landingEditMode);
+
+  const rowsHTML = cats.map((cat, i) => {
     const count = contacts.filter(c => c.categoria === cat).length;
     return `
       <div class="landing-row${count === 0 ? ' empty' : ''}" data-cat="${escapeHTML(cat)}" tabindex="0" role="button">
@@ -1477,15 +1513,52 @@ function renderLanding() {
         <span class="lr-nm">${escapeHTML(cat)}</span>
         <span class="lr-dots"></span>
         <span class="lr-ct">${count}</span>
+        <button type="button" class="lr-remove" data-cat="${escapeHTML(cat)}" title="Remover categoria" aria-label="Remover categoria">✕</button>
       </div>
     `;
   }).join('');
 
+  const addRowHTML = landingEditMode ? `
+    <div class="landing-add-row">
+      <input type="text" id="landingAddCatInput" placeholder="Nova categoria…" maxlength="60">
+      <button type="button" id="landingAddCatBtn">+ Adicionar</button>
+    </div>
+  ` : '';
+
+  indexEl.innerHTML = rowsHTML + addRowHTML;
+
   indexEl.querySelectorAll('.landing-row').forEach(el => {
-    el.addEventListener('click', () => enterAppForCategory(el.dataset.cat));
-    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterAppForCategory(el.dataset.cat); } });
+    el.addEventListener('click', () => { if (!landingEditMode) enterAppForCategory(el.dataset.cat); });
+    el.addEventListener('keydown', (e) => {
+      if (!landingEditMode && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); enterAppForCategory(el.dataset.cat); }
+    });
   });
+
+  indexEl.querySelectorAll('.lr-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (removeCategory(btn.dataset.cat)) renderLanding();
+    });
+  });
+
+  const addInput = document.getElementById('landingAddCatInput');
+  const addBtn = document.getElementById('landingAddCatBtn');
+  if (addBtn) {
+    const submitNewCategory = () => {
+      if (addCategory(addInput.value)) renderLanding();
+      else addInput.focus();
+    };
+    addBtn.addEventListener('click', submitNewCategory);
+    addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitNewCategory(); } });
+  }
 }
+
+document.getElementById('landingEditBtn').addEventListener('click', function () {
+  landingEditMode = !landingEditMode;
+  this.classList.toggle('active', landingEditMode);
+  this.textContent = landingEditMode ? 'Concluído' : 'Editar';
+  renderLanding();
+});
 
 function enterAppForCategory(cat) {
   activeCategory = cat;

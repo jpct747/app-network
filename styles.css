@@ -180,6 +180,28 @@ body:not(.landing-active) .landing-screen { display: none; }
   color: var(--text-muted);
 }
 
+.landing-index-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.landing-edit-btn {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.landing-edit-btn:hover { color: var(--text-primary); border-color: var(--wire-active); }
+.landing-edit-btn.active { color: var(--wire-active); border-color: var(--wire-active); background: var(--wire-soft); }
+
 .landing-index {
   border-top: 1px solid var(--border);
 }
@@ -199,6 +221,58 @@ body:not(.landing-active) .landing-screen { display: none; }
   border-color: var(--wire-active);
 }
 .landing-row.empty { opacity: 0.5; }
+
+.lr-remove {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.lr-remove:hover { color: var(--status-critical); border-color: var(--status-critical); }
+.landing-index.editing .landing-row { cursor: default; }
+.landing-index.editing .lr-remove { display: flex; }
+.landing-index.editing .lr-ct { display: none; }
+
+.landing-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 4px;
+}
+.landing-add-row input {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 1px dotted var(--border);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 4px 0;
+}
+.landing-add-row input:focus { outline: none; border-color: var(--wire-active); }
+.landing-add-row button {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wire-active);
+  background: var(--wire-soft);
+  border: 1px solid var(--wire-active);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.landing-add-row button:hover { background: var(--wire-active); color: #0a0a0c; }
 
 .lr-idx {
   font-family: var(--font-mono);

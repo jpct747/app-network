@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260915h">
+<link rel="stylesheet" href="styles.css?v=20260915i">
 </head>
 <body class="landing-active">
 <button type="button" class="undo-fab" id="undoBtn" disabled title="Desfazer última ação" aria-label="Desfazer última ação"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h11a5 5 0 0 1 0 10h-3"/><polyline points="9,6 4,11 9,16"/></svg></button>
@@ -26,7 +26,12 @@
       <p class="landing-sub">Organizado por categoria, sempre atualizado, sempre consigo. Escolha uma entrada no índice para explorar essa parte da sua rede.</p>
       <div class="landing-stats" id="landingStats"></div>
     </div>
-    <div class="landing-index" id="landingIndex"></div>
+    <div class="landing-index-col">
+      <div class="landing-index-head">
+        <button type="button" class="landing-edit-btn" id="landingEditBtn">Editar</button>
+      </div>
+      <div class="landing-index" id="landingIndex"></div>
+    </div>
   </div>
 </div>
 
@@ -214,6 +219,6 @@
   </div>
 </div>
 
-<script src="script.js?v=20260915h"></script>
+<script src="script.js?v=20260915i"></script>
 </body>
 </html>
