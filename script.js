@@ -1504,6 +1504,96 @@ function showLanding() {
 
 document.getElementById('landingBackBtn').addEventListener('click', showLanding);
 
+// ---------- Landing background: a live, cursor-reactive particle field ----------
+// A real-time simulation rather than a looping animation, so it never repeats.
+(function initLandingField() {
+  const canvas = document.getElementById('landingCanvas');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, particles = [];
+  const mouse = { x: -9999, y: -9999 };
+  const pulses = [];
+
+  function isActive() { return document.body.classList.contains('landing-active'); }
+
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  function seed() {
+    const count = Math.round((W * H) / 11000);
+    particles = Array.from({ length: count }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.12, vy: (Math.random() - 0.5) * 0.12,
+      r: Math.random() * 1.5 + 0.7,
+    }));
+  }
+  resize();
+  seed();
+  window.addEventListener('resize', () => { resize(); seed(); });
+  window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseleave', () => { mouse.x = -9999; mouse.y = -9999; });
+  window.addEventListener('mousedown', (e) => {
+    if (!isActive() || e.target.closest('.undo-fab, .landing-back-fab')) return;
+    pulses.push({ x: e.clientX, y: e.clientY, r: 0, life: 1 });
+  });
+
+  function step() {
+    if (isActive() && !reduceMotion) {
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy;
+        const dx = p.x - mouse.x, dy = p.y - mouse.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < 130 * 130) {
+          const d = Math.sqrt(d2) || 1;
+          const force = (1 - d / 130) * 0.6;
+          p.vx += (dx / d) * force * 0.06;
+          p.vy += (dy / d) * force * 0.06;
+        }
+        p.vx *= 0.985; p.vy *= 0.985;
+        if (p.x < -20) p.x = W + 20; if (p.x > W + 20) p.x = -20;
+        if (p.y < -20) p.y = H + 20; if (p.y > H + 20) p.y = -20;
+      }
+      for (const pu of pulses) { pu.r += 9; pu.life -= 0.012; }
+      for (let i = pulses.length - 1; i >= 0; i--) if (pulses[i].life <= 0) pulses.splice(i, 1);
+    }
+
+    if (isActive()) {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const a = particles[i], b = particles[j];
+          const dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 110) {
+            ctx.strokeStyle = `rgba(201,169,98,${0.13 * (1 - d / 110)})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+      for (const p of particles) {
+        const dm = Math.hypot(p.x - mouse.x, p.y - mouse.y);
+        const near = dm < 150;
+        ctx.beginPath();
+        ctx.fillStyle = near ? 'rgba(227,197,131,0.85)' : 'rgba(201,169,98,0.5)';
+        ctx.arc(p.x, p.y, near ? p.r * 1.7 : p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (const pu of pulses) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(227,197,131,${pu.life * 0.5})`;
+        ctx.lineWidth = 1;
+        ctx.arc(pu.x, pu.y, pu.r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  step();
+})();
+
 // ---------- Init ----------
 selectionSafety();
 applyDensity();
