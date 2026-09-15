@@ -10,11 +10,54 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260915i">
+<link rel="stylesheet" href="styles.css?v=20260915j">
 </head>
-<body class="landing-active">
+<body class="auth-active">
 <button type="button" class="undo-fab" id="undoBtn" disabled title="Desfazer última ação" aria-label="Desfazer última ação"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h11a5 5 0 0 1 0 10h-3"/><polyline points="9,6 4,11 9,16"/></svg></button>
 <button type="button" class="landing-back-fab" id="landingBackBtn" title="Voltar ao menu inicial das categorias" aria-label="Voltar ao menu inicial das categorias"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,5 5,12 12,19"/></svg></button>
+
+<!-- Auth: cosmetic login/sign-up gate before the category index (no real accounts yet) -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-card-wrap">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-mode="login">Entrar</button>
+        <button type="button" class="auth-tab" data-mode="signup">Criar Conta</button>
+      </div>
+      <h1 class="auth-title" id="authTitle">Bem-vindo!</h1>
+      <p class="auth-sub" id="authSub">Introduza os seus dados para entrar.</p>
+
+      <form id="authForm">
+        <label class="auth-field">
+          <span>Email</span>
+          <input type="email" placeholder="Introduza o seu email">
+        </label>
+        <label class="auth-field">
+          <span class="auth-field-row">Palavra-passe <a href="#" class="auth-forgot" id="authForgot">Esqueceu-se?</a></span>
+          <input type="password" placeholder="Introduza a palavra-passe">
+        </label>
+        <button type="submit" class="auth-submit" id="authSubmitBtn">Entrar</button>
+      </form>
+
+      <div class="auth-or"><span>OU</span></div>
+
+      <div class="auth-social">
+        <button type="button" class="auth-social-btn" data-provider="google"><span class="auth-social-icon">G</span> Continuar com Google</button>
+        <button type="button" class="auth-social-btn" data-provider="apple"><span class="auth-social-icon">A</span> Continuar com Apple</button>
+      </div>
+
+      <p class="auth-switch" id="authSwitchText">Ainda não tem conta? <a href="#" id="authSwitchLink">Criar conta</a></p>
+    </div>
+
+    <div class="auth-visual">
+      <div class="auth-visual-overlay"></div>
+      <div class="auth-quote">
+        <p class="auth-quote-title">The Power of Connection.</p>
+        <p class="auth-quote-text">Organize o seu network por categoria, com a ficha de cada contacto sempre à mão — onde quer que esteja.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Landing: pick a category before entering the network view -->
 <div class="landing-screen" id="landingScreen">
@@ -219,6 +262,6 @@
   </div>
 </div>
 
-<script src="script.js?v=20260915i"></script>
+<script src="script.js?v=20260915j"></script>
 </body>
 </html>

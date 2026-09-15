@@ -1667,6 +1667,38 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
   step();
 })();
 
+// ---------- Auth screen: cosmetic login/sign-up gate (no real accounts yet) ----------
+function enterFromAuth() {
+  document.body.classList.remove('auth-active');
+  document.body.classList.add('landing-active');
+  renderLanding();
+}
+document.getElementById('authForm').addEventListener('submit', (e) => { e.preventDefault(); enterFromAuth(); });
+document.querySelectorAll('.auth-social-btn').forEach(btn => btn.addEventListener('click', enterFromAuth));
+document.getElementById('authForgot').addEventListener('click', (e) => e.preventDefault());
+
+function setAuthMode(mode) {
+  const isSignup = mode === 'signup';
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('authTitle').textContent = isSignup ? 'Criar conta' : 'Bem-vindo!';
+  document.getElementById('authSub').textContent = isSignup ? 'Preencha os dados para criar a sua conta.' : 'Introduza os seus dados para entrar.';
+  document.getElementById('authSubmitBtn').textContent = isSignup ? 'Criar Conta' : 'Entrar';
+  document.getElementById('authSwitchText').innerHTML = isSignup
+    ? 'Já tem conta? <a href="#" id="authSwitchLink">Entrar</a>'
+    : 'Ainda não tem conta? <a href="#" id="authSwitchLink">Criar conta</a>';
+  document.getElementById('authSwitchLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    setAuthMode(isSignup ? 'login' : 'signup');
+  });
+}
+document.querySelectorAll('.auth-tab').forEach(tab => {
+  tab.addEventListener('click', () => setAuthMode(tab.dataset.mode));
+});
+document.getElementById('authSwitchLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  setAuthMode('signup');
+});
+
 // ---------- Init ----------
 selectionSafety();
 applyDensity();
