@@ -1587,7 +1587,9 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
   const mouse = { x: -9999, y: -9999 };
   const pulses = [];
 
-  function isActive() { return document.body.classList.contains('landing-active'); }
+  function isActive() {
+    return document.body.classList.contains('landing-active') || document.body.classList.contains('auth-active');
+  }
 
   function resize() {
     W = window.innerWidth; H = window.innerHeight;

@@ -10,11 +10,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=20260915j">
+<link rel="stylesheet" href="styles.css?v=20260915k">
 </head>
 <body class="auth-active">
 <button type="button" class="undo-fab" id="undoBtn" disabled title="Desfazer última ação" aria-label="Desfazer última ação"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h11a5 5 0 0 1 0 10h-3"/><polyline points="9,6 4,11 9,16"/></svg></button>
 <button type="button" class="landing-back-fab" id="landingBackBtn" title="Voltar ao menu inicial das categorias" aria-label="Voltar ao menu inicial das categorias"><svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,5 5,12 12,19"/></svg></button>
+
+<!-- Live particle field: shared animated background behind the auth and landing screens -->
+<canvas class="landing-canvas" id="landingCanvas"></canvas>
 
 <!-- Auth: cosmetic login/sign-up gate before the category index (no real accounts yet) -->
 <div class="auth-screen" id="authScreen">
@@ -42,8 +45,14 @@
       <div class="auth-or"><span>OU</span></div>
 
       <div class="auth-social">
-        <button type="button" class="auth-social-btn" data-provider="google"><span class="auth-social-icon">G</span> Continuar com Google</button>
-        <button type="button" class="auth-social-btn" data-provider="apple"><span class="auth-social-icon">A</span> Continuar com Apple</button>
+        <button type="button" class="auth-social-btn" data-provider="google">
+          <svg class="auth-social-icon" viewBox="0 0 18 18" width="17" height="17"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+          Continuar com Google
+        </button>
+        <button type="button" class="auth-social-btn" data-provider="apple">
+          <svg class="auth-social-icon" viewBox="0 0 384 512" width="15" height="15" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
+          Continuar com Apple
+        </button>
       </div>
 
       <p class="auth-switch" id="authSwitchText">Ainda não tem conta? <a href="#" id="authSwitchLink">Criar conta</a></p>
@@ -61,7 +70,6 @@
 
 <!-- Landing: pick a category before entering the network view -->
 <div class="landing-screen" id="landingScreen">
-  <canvas class="landing-canvas" id="landingCanvas"></canvas>
   <div class="landing-grid">
     <div class="landing-intro">
       <p class="landing-eyebrow">Rede de Contactos</p>
@@ -262,6 +270,6 @@
   </div>
 </div>
 
-<script src="script.js?v=20260915j"></script>
+<script src="script.js?v=20260915k"></script>
 </body>
 </html>
