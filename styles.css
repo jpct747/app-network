@@ -58,6 +58,25 @@
 .undo-fab:hover:not(:disabled) { border-color: var(--wire-active); }
 .undo-fab:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.landing-back-fab {
+  position: fixed;
+  top: 14px;
+  left: 58px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+.landing-back-fab:hover { border-color: var(--wire-active); color: var(--text-primary); }
+
 html, body {
   height: 100%;
   margin: 0;
@@ -77,7 +96,8 @@ body {
 /* ---------- Landing screen: pick a category before entering the network ---------- */
 
 body.landing-active .app,
-body.landing-active .undo-fab { display: none; }
+body.landing-active .undo-fab,
+body.landing-active .landing-back-fab { display: none; }
 body:not(.landing-active) .landing-screen { display: none; }
 
 .landing-screen {
@@ -173,21 +193,6 @@ body:not(.landing-active) .landing-screen { display: none; }
   transition: color .15s ease;
 }
 .landing-item:hover .lc-label { color: var(--text-primary); }
-
-.landing-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 2px 0;
-}
-.landing-back:hover { color: var(--wire-active); }
 
 .app {
   display: grid;
