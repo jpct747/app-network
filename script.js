@@ -47,6 +47,121 @@ function icon(name, extraClass) {
   return `<svg class="svg-icon${extraClass ? ' ' + extraClass : ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
 }
 
+// ---------- Toasts + confetti: small celebratory moments ----------
+function showToast(title, sub) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `
+    <span class="toast-icon">${icon('sparkle')}</span>
+    <span class="toast-body">
+      <span class="toast-title">${escapeHTML(title)}</span>
+      <span class="toast-sub">${escapeHTML(sub || '')}</span>
+    </span>
+  `;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('leaving');
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }, 3600);
+}
+
+(function initConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W, H, pieces = [];
+  let running = false;
+  function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * devicePixelRatio; canvas.height = H * devicePixelRatio;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#c9a962', '#e3c583', '#f5f2e8', '#8f6a3d'];
+  window.fireConfetti = function fireConfetti() {
+    if (reduceMotion) return;
+    const cx = W / 2, cy = H * 0.28;
+    for (let i = 0; i < 90; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 3 + Math.random() * 6;
+      pieces.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed * Math.random(),
+        vy: Math.sin(angle) * speed - 2,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.3,
+        size: 4 + Math.random() * 5,
+        color: colors[i % colors.length],
+        life: 1,
+      });
+    }
+    if (!running) { running = true; requestAnimationFrame(step); }
+  };
+
+  function step() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of pieces) {
+      p.vy += 0.12;
+      p.x += p.vx; p.y += p.vy;
+      p.rot += p.vr;
+      p.life -= 0.012;
+    }
+    pieces = pieces.filter(p => p.life > 0 && p.y < H + 40);
+    for (const p of pieces) {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.66);
+      ctx.restore();
+    }
+    if (pieces.length) {
+      requestAnimationFrame(step);
+    } else {
+      running = false;
+      ctx.clearRect(0, 0, W, H);
+    }
+  }
+})();
+
+// ---------- Achievements: milestones that fire a toast + confetti once each ----------
+const ACHIEVEMENTS_KEY = 'rede_contactos_achievements_v1';
+function getUnlockedAchievements() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(ACHIEVEMENTS_KEY));
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) { return new Set(); }
+}
+function unlockAchievement(key, title, sub) {
+  const unlocked = getUnlockedAchievements();
+  if (unlocked.has(key)) return;
+  unlocked.add(key);
+  localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify([...unlocked]));
+  showToast(title, sub);
+  window.fireConfetti();
+}
+function checkContactMilestones(total) {
+  const milestones = {
+    1: ['first_contact', 'Primeiro contacto!', 'A sua rede acabou de começar.'],
+    5: ['m5', '5 contactos', 'A rede está a crescer.'],
+    10: ['m10', '10 contactos', 'Já tem uma rede a sério.'],
+    25: ['m25', '25 contactos', 'Impressionante — continue assim.'],
+    50: ['m50', '50 contactos', 'Uma rede de peso.'],
+    100: ['m100', '100 contactos', 'Está no topo do seu jogo.'],
+  };
+  if (milestones[total]) unlockAchievement(...milestones[total]);
+}
+function checkFirstConnection() {
+  if (contacts.some(c => (c.relacionados || []).length > 0)) {
+    unlockAchievement('first_link', 'Primeira ligação criada!', 'Começou a construir a sua rede a sério.');
+  }
+}
+
 const TAB_DEFS = [
   { key: 'geral', icon: icon('idCard'), lbl: 'Ficha Pessoal' },
   { key: 'fotos', icon: icon('camera'), lbl: 'Fotos' },
@@ -1286,8 +1401,10 @@ contactForm.addEventListener('submit', (e) => {
     selectedId = newContact.id;
     finalId = newContact.id;
     lastAddedId = newContact.id;
+    checkContactMilestones(contacts.length);
   }
   syncBidirectionalRelations(finalId, data.relacionados, oldRelatedIds);
+  if (data.relacionados && data.relacionados.length > 0) checkFirstConnection();
 
   saveContacts(contacts);
   closeModal();
@@ -1491,17 +1608,46 @@ densityBtn.addEventListener('click', () => {
 // ---------- Landing screen: a category index before entering the network ----------
 let landingEditMode = false;
 
-function renderLanding() {
+function animateCountUp(el, target, padTwo) {
+  const format = (n) => padTwo ? String(n).padStart(2, '0') : String(n);
+  const prev = Number(el.dataset.value || 0);
+  el.dataset.value = target;
+  if (prev === target || REDUCE_MOTION) { el.textContent = format(target); return; }
+  const duration = 650;
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = format(Math.round(prev + (target - prev) * eased));
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function renderLandingStats() {
   const statsEl = document.getElementById('landingStats');
-  const indexEl = document.getElementById('landingIndex');
   const cats = getCategoryList();
   const followUp = contacts.filter(x => daysBetween(lastContactDate(x) || x.criadoEm) >= 90).length;
 
-  statsEl.innerHTML = `
-    <div><b>${contacts.length}</b><span>Contacto${contacts.length === 1 ? '' : 's'}</span></div>
-    <div><b>${cats.length}</b><span>Categorias</span></div>
-    <div><b>${String(followUp).padStart(2, '0')}</b><span>Follow-up</span></div>
-  `;
+  if (!statsEl.dataset.built) {
+    statsEl.innerHTML = `
+      <div><b class="stat-num" data-key="contacts">0</b><span data-label="contacts"></span></div>
+      <div><b class="stat-num" data-key="cats">0</b><span>Categorias</span></div>
+      <div><b class="stat-num" data-key="followup">00</b><span>Follow-up</span></div>
+    `;
+    statsEl.dataset.built = '1';
+  }
+  statsEl.querySelector('[data-label="contacts"]').textContent = `Contacto${contacts.length === 1 ? '' : 's'}`;
+  animateCountUp(statsEl.querySelector('.stat-num[data-key="contacts"]'), contacts.length, false);
+  animateCountUp(statsEl.querySelector('.stat-num[data-key="cats"]'), cats.length, false);
+  animateCountUp(statsEl.querySelector('.stat-num[data-key="followup"]'), followUp, true);
+}
+
+function renderLanding() {
+  const indexEl = document.getElementById('landingIndex');
+  const cats = getCategoryList();
+
+  renderLandingStats();
 
   indexEl.classList.toggle('editing', landingEditMode);
 
@@ -1560,29 +1706,56 @@ document.getElementById('landingEditBtn').addEventListener('click', function () 
   renderLanding();
 });
 
+// ---------- Smooth cross-fade between the auth / landing / app screens ----------
+const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function transitionScreens(applyFn) {
+  const current = [...document.querySelectorAll('.auth-screen, .landing-screen, .app')]
+    .find(s => getComputedStyle(s).display !== 'none');
+  if (!current || REDUCE_MOTION) { applyFn(); return; }
+  current.classList.add('screen-fade-out');
+  setTimeout(() => {
+    applyFn();
+    current.classList.remove('screen-fade-out');
+  }, 220);
+}
+
 function enterAppForCategory(cat) {
-  activeCategory = cat;
-  statView = 'todos';
-  searchTerm = '';
-  document.getElementById('searchInput').value = '';
-  selectionSafety();
-  document.body.classList.remove('landing-active');
-  renderAll();
+  transitionScreens(() => {
+    activeCategory = cat;
+    statView = 'todos';
+    searchTerm = '';
+    document.getElementById('searchInput').value = '';
+    selectionSafety();
+    document.body.classList.remove('landing-active');
+    renderAll();
+  });
 }
 
 function showLanding() {
-  document.body.classList.add('landing-active');
-  renderLanding();
+  transitionScreens(() => {
+    document.body.classList.add('landing-active');
+    renderLanding();
+  });
 }
 
 document.getElementById('landingBackBtn').addEventListener('click', showLanding);
 
 // ---------- Landing background: a live, cursor-reactive particle field ----------
 // A real-time simulation rather than a looping animation, so it never repeats.
+function getTimeTint() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 8) return { base: [214, 150, 110], near: [245, 190, 150] };
+  if (h >= 18 && h < 21) return { base: [212, 120, 90], near: [240, 160, 120] };
+  if (h >= 21 || h < 5) return { base: [150, 165, 215], near: [195, 210, 240] };
+  return { base: [201, 169, 98], near: [227, 197, 131] };
+}
 (function initLandingField() {
   const canvas = document.getElementById('landingCanvas');
   const ctx = canvas.getContext('2d');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tint = getTimeTint();
+  const baseC = tint.base.join(',');
+  const nearC = tint.near.join(',');
   let W, H, particles = [];
   const mouse = { x: -9999, y: -9999 };
   const pulses = [];
@@ -1642,7 +1815,7 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
           const a = particles[i], b = particles[j];
           const dx = a.x - b.x, dy = a.y - b.y, d = Math.sqrt(dx * dx + dy * dy);
           if (d < 110) {
-            ctx.strokeStyle = `rgba(201,169,98,${0.13 * (1 - d / 110)})`;
+            ctx.strokeStyle = `rgba(${baseC},${0.13 * (1 - d / 110)})`;
             ctx.lineWidth = 0.6;
             ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
           }
@@ -1652,13 +1825,13 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
         const dm = Math.hypot(p.x - mouse.x, p.y - mouse.y);
         const near = dm < 150;
         ctx.beginPath();
-        ctx.fillStyle = near ? 'rgba(227,197,131,0.85)' : 'rgba(201,169,98,0.5)';
+        ctx.fillStyle = near ? `rgba(${nearC},0.85)` : `rgba(${baseC},0.5)`;
         ctx.arc(p.x, p.y, near ? p.r * 1.7 : p.r, 0, Math.PI * 2);
         ctx.fill();
       }
       for (const pu of pulses) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(227,197,131,${pu.life * 0.5})`;
+        ctx.strokeStyle = `rgba(${nearC},${pu.life * 0.5})`;
         ctx.lineWidth = 1;
         ctx.arc(pu.x, pu.y, pu.r, 0, Math.PI * 2);
         ctx.stroke();
@@ -1671,9 +1844,11 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
 
 // ---------- Auth screen: cosmetic login/sign-up gate (no real accounts yet) ----------
 function enterFromAuth() {
-  document.body.classList.remove('auth-active');
-  document.body.classList.add('landing-active');
-  renderLanding();
+  transitionScreens(() => {
+    document.body.classList.remove('auth-active');
+    document.body.classList.add('landing-active');
+    renderLanding();
+  });
 }
 document.getElementById('authForm').addEventListener('submit', (e) => { e.preventDefault(); enterFromAuth(); });
 document.querySelectorAll('.auth-social-btn').forEach(btn => btn.addEventListener('click', enterFromAuth));
