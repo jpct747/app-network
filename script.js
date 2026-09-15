@@ -328,7 +328,6 @@ function renderStatCards() {
   const s = computeStats();
   const cards = [
     { icon: icon('users'), num: s.total, lbl: 'Contactos', view: 'todos' },
-    { icon: icon('tag'), num: s.categorias, lbl: 'Categorias', view: 'categorias' },
     { icon: icon('calendar'), num: s.aniversarios, lbl: 'Aniversários (30d)', view: 'aniversarios' },
     { icon: icon('clock'), num: s.semContacto, lbl: 'Follow-up (90d+)', view: 'followup', warn: s.semContacto > 0 },
     { icon: icon('starFilled'), num: s.favoritos, lbl: 'Favoritos', view: 'favoritos' },
@@ -349,30 +348,13 @@ function renderStatCards() {
 }
 
 // ---------- Category filter chips ----------
+// The category is chosen once, on the landing screen, so this row stays hidden inside the app.
 function renderChips() {
   const chipsRow = document.getElementById('chipsRow');
   const searchInput = document.getElementById('searchInput');
-  if (statView === 'aniversarios') {
-    chipsRow.style.display = 'none';
-    searchInput.style.display = 'none';
-    return;
-  }
-  chipsRow.style.display = '';
-  searchInput.style.display = '';
-
-  const chips = ['Todos', ...getCategoryList()];
-  chipsRow.innerHTML = chips.map(cat => `
-    <button type="button" class="chip ${cat === activeCategory ? 'active' : ''}" data-cat="${cat}"
-      ${cat !== 'Todos' ? `style="--chip-color:${categoryColor(cat)}"` : ''}>${cat}</button>
-  `).join('');
-  chipsRow.querySelectorAll('.chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      activeCategory = btn.dataset.cat;
-      focusMode = false;
-      selectionSafety();
-      renderAll();
-    });
-  });
+  chipsRow.style.display = 'none';
+  chipsRow.innerHTML = '';
+  searchInput.style.display = statView === 'aniversarios' ? 'none' : '';
 }
 
 // ---------- List (branches) ----------
@@ -1495,10 +1477,10 @@ densityBtn.addEventListener('click', () => {
 
 // ---------- Landing screen: pick a category before entering the network ----------
 function circleSizeForCount(n) {
-  return Math.round(112 + Math.min(88, Math.sqrt(n) * 24));
+  return Math.round(175 + Math.min(135, Math.sqrt(n) * 34));
 }
 function dotCountForCategory(n) {
-  return Math.max(5, Math.min(28, Math.round(5 + Math.sqrt(n) * 4)));
+  return Math.max(6, Math.min(34, Math.round(6 + Math.sqrt(n) * 5)));
 }
 
 function renderLanding() {
@@ -1524,7 +1506,7 @@ function renderLanding() {
         <div class="landing-circle${count === 0 ? ' empty' : ''}" style="width:${size}px;height:${size}px;">
           <div class="dots">${dotsHTML}</div>
         </div>
-        <span class="lc-label">${escapeHTML(cat)}</span>
+        <span class="lc-label" style="max-width:${Math.round(size * 0.86)}px">${escapeHTML(cat)}</span>
       </div>
     `;
   }).join('');
