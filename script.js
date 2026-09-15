@@ -1456,57 +1456,32 @@ densityBtn.addEventListener('click', () => {
   applyDensity();
 });
 
-// ---------- Landing screen: a category "pizza" wheel before entering the network ----------
-function polarPoint(cx, cy, r, angle) {
-  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-}
-function donutWedgePath(cx, cy, r0, r1, a0, a1) {
-  const outerStart = polarPoint(cx, cy, r1, a0);
-  const outerEnd = polarPoint(cx, cy, r1, a1);
-  const innerEnd = polarPoint(cx, cy, r0, a1);
-  const innerStart = polarPoint(cx, cy, r0, a0);
-  const largeArc = (a1 - a0) > Math.PI ? 1 : 0;
-  return [
-    `M ${outerStart.x} ${outerStart.y}`,
-    `A ${r1} ${r1} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
-    `L ${innerEnd.x} ${innerEnd.y}`,
-    `A ${r0} ${r0} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
-    'Z',
-  ].join(' ');
-}
-
+// ---------- Landing screen: a category index before entering the network ----------
 function renderLanding() {
-  const svg = document.getElementById('landingPie');
-  const centerEl = document.getElementById('landingPieCenter');
+  const statsEl = document.getElementById('landingStats');
+  const indexEl = document.getElementById('landingIndex');
   const cats = getCategoryList();
-  const n = cats.length;
-  const cx = 300, cy = 300, r0 = 95, r1 = 280, gap = 0.012;
+  const followUp = contacts.filter(x => daysBetween(lastContactDate(x) || x.criadoEm) >= 90).length;
 
-  svg.setAttribute('viewBox', '0 0 600 600');
-  svg.innerHTML = cats.map((cat, i) => {
+  statsEl.innerHTML = `
+    <div><b>${contacts.length}</b><span>Contacto${contacts.length === 1 ? '' : 's'}</span></div>
+    <div><b>${cats.length}</b><span>Categorias</span></div>
+    <div><b>${String(followUp).padStart(2, '0')}</b><span>Follow-up</span></div>
+  `;
+
+  indexEl.innerHTML = cats.map((cat, i) => {
     const count = contacts.filter(c => c.categoria === cat).length;
-    const a0 = (i / n) * Math.PI * 2 - Math.PI / 2 + gap / 2;
-    const a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2 - gap / 2;
-    const mid = (a0 + a1) / 2;
-    const tx = (Math.cos(mid) * 14).toFixed(1);
-    const ty = (Math.sin(mid) * 14).toFixed(1);
-    const d = donutWedgePath(cx, cy, r0, r1, a0, a1);
-    const labelPt = polarPoint(cx, cy, (r0 + r1) / 2 + 22, mid);
-    const wedge = `<path class="pie-wedge${count === 0 ? ' empty' : ''}" d="${d}" fill="${categoryColor(cat)}" tabindex="0" role="button" data-cat="${escapeHTML(cat)}" data-count="${count}" style="--tx:${tx}px;--ty:${ty}px"></path>`;
-    const label = `<foreignObject class="pie-label-box" x="${(labelPt.x - 42).toFixed(1)}" y="${(labelPt.y - 34).toFixed(1)}" width="84" height="68" style="--tx:${tx}px;--ty:${ty}px"><div xmlns="http://www.w3.org/1999/xhtml" class="pie-label${count === 0 ? ' empty' : ''}"><span>${escapeHTML(cat)}</span></div></foreignObject>`;
-    return wedge + label;
+    return `
+      <div class="landing-row${count === 0 ? ' empty' : ''}" data-cat="${escapeHTML(cat)}" tabindex="0" role="button">
+        <span class="lr-idx">${String(i + 1).padStart(2, '0')}</span>
+        <span class="lr-nm">${escapeHTML(cat)}</span>
+        <span class="lr-dots"></span>
+        <span class="lr-ct">${count}</span>
+      </div>
+    `;
   }).join('');
 
-  function setCenter(cat, count) {
-    if (cat == null) { centerEl.innerHTML = ''; return; }
-    centerEl.innerHTML = `<span class="lpc-name">${escapeHTML(cat)}</span><span class="lpc-count">${count} contacto${count === 1 ? '' : 's'}</span>`;
-  }
-
-  svg.querySelectorAll('.pie-wedge').forEach(el => {
-    el.addEventListener('mouseenter', () => setCenter(el.dataset.cat, Number(el.dataset.count)));
-    el.addEventListener('focus', () => setCenter(el.dataset.cat, Number(el.dataset.count)));
-    el.addEventListener('mouseleave', () => setCenter(null));
-    el.addEventListener('blur', () => setCenter(null));
+  indexEl.querySelectorAll('.landing-row').forEach(el => {
     el.addEventListener('click', () => enterAppForCategory(el.dataset.cat));
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterAppForCategory(el.dataset.cat); } });
   });
