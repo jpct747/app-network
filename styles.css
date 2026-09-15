@@ -529,6 +529,31 @@ body {
   flex-shrink: 0;
 }
 
+.side-tile-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.side-tile-add:hover {
+  border-color: var(--wire-active);
+  border-style: solid;
+  color: var(--wire-active);
+  background: var(--wire-soft);
+}
+
 /* ---------- Avatars ---------- */
 
 .avatar {

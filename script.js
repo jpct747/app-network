@@ -588,8 +588,12 @@ function insertConnectionsAfterSelected() {
     tile.className = 'contact-row side-tile related-side-tile';
     tile.dataset.id = r.id;
     tile.style.borderLeftColor = categoryColor(r.categoria);
-    tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span>`;
+    tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span><button type="button" class="side-tile-add" title="Adicionar contacto ligado a ${escapeHTML(r.nome)}">+</button>`;
     tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; focusMode = true; renderAll(); });
+    tile.querySelector('.side-tile-add').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openModal(null, [r.id]);
+    });
     stack.appendChild(tile);
   });
 
