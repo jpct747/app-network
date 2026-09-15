@@ -307,7 +307,6 @@ function getFiltered() {
 
 function setStatView(view) {
   statView = view;
-  activeCategory = 'Todos';
   searchTerm = '';
   focusMode = false;
   document.getElementById('searchInput').value = '';
@@ -317,11 +316,11 @@ function setStatView(view) {
 
 // ---------- Aggregate stats ----------
 function computeStats() {
-  const categorias = new Set(contacts.map(x => x.categoria)).size;
-  const aniversarios = contacts.filter(x => x.aniversario && daysToNextBirthday(x.aniversario) <= 30).length;
-  const semContacto = contacts.filter(x => daysBetween(lastContactDate(x) || x.criadoEm) >= 90).length;
-  const favoritos = contacts.filter(x => x.favorito).length;
-  return { total: contacts.length, categorias, aniversarios, semContacto, favoritos };
+  const scoped = activeCategory === 'Todos' ? contacts : contacts.filter(x => x.categoria === activeCategory);
+  const aniversarios = scoped.filter(x => x.aniversario && daysToNextBirthday(x.aniversario) <= 30).length;
+  const semContacto = scoped.filter(x => daysBetween(lastContactDate(x) || x.criadoEm) >= 90).length;
+  const favoritos = scoped.filter(x => x.favorito).length;
+  return { total: scoped.length, aniversarios, semContacto, favoritos };
 }
 
 function renderStatCards() {
