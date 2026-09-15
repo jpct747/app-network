@@ -1510,7 +1510,10 @@ function renderLanding() {
     const tx = (Math.cos(mid) * 14).toFixed(1);
     const ty = (Math.sin(mid) * 14).toFixed(1);
     const d = donutWedgePath(cx, cy, r0, r1, a0, a1);
-    return `<path class="pie-wedge${count === 0 ? ' empty' : ''}" d="${d}" fill="${categoryColor(cat)}" tabindex="0" role="button" data-cat="${escapeHTML(cat)}" data-count="${count}" style="--tx:${tx}px;--ty:${ty}px"></path>`;
+    const labelPt = polarPoint(cx, cy, (r0 + r1) / 2 + 22, mid);
+    const wedge = `<path class="pie-wedge${count === 0 ? ' empty' : ''}" d="${d}" fill="${categoryColor(cat)}" tabindex="0" role="button" data-cat="${escapeHTML(cat)}" data-count="${count}" style="--tx:${tx}px;--ty:${ty}px"></path>`;
+    const label = `<foreignObject class="pie-label-box" x="${(labelPt.x - 42).toFixed(1)}" y="${(labelPt.y - 34).toFixed(1)}" width="84" height="68" style="--tx:${tx}px;--ty:${ty}px"><div xmlns="http://www.w3.org/1999/xhtml" class="pie-label${count === 0 ? ' empty' : ''}"><span>${escapeHTML(cat)}</span></div></foreignObject>`;
+    return wedge + label;
   }).join('');
 
   function setCenter(cat, count) {
