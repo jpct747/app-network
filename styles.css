@@ -489,6 +489,24 @@ body {
   gap: 10px;
 }
 
+.branch-node {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.swa-connections-nested {
+  gap: 6px;
+}
+
+.second-degree-tile {
+  padding: 5px 9px 5px 6px;
+  opacity: 0.8;
+}
+.second-degree-tile .name { font-size: 11.5px; }
+.second-degree-tile .avatar-sm { width: 20px; height: 20px; font-size: 9px; }
+.second-degree-tile .side-tile-add { width: 17px; height: 17px; font-size: 10px; }
+
 .back-to-all {
   display: inline-flex;
   align-items: center;

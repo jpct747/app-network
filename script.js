@@ -544,22 +544,38 @@ function drawCurves() {
     paths += `<path class="${isActive ? 'active' : ''}" d="M ${originX} ${originY} C ${midX} ${originY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
   });
 
-  // Selected row -> its connected-people tiles + the "add" tile, a short direct wire.
-  const selRow = branchesEl.querySelector(`.contact-row[data-id="${selectedId}"]:not(.side-tile)`);
-  if (selRow) {
-    const selR = selRow.getBoundingClientRect();
-    const startX = selR.right - wrapRect.left;
-    const startY = selR.top + selR.height / 2 - wrapRect.top;
-    branchesEl.querySelectorAll('.selected-with-add .side-tile').forEach(tile => {
-      const r = tile.getBoundingClientRect();
-      const x2 = r.left - wrapRect.left;
-      const y2 = r.top + r.height / 2 - wrapRect.top;
-      const midX = startX + (x2 - startX) * 0.5;
-      paths += `<path class="active" d="M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
-    });
-  }
+  // Generic local wiring: any tile carrying data-parent-tile gets a short wire from its parent tile
+  // (the selected row for its direct connections, or a direct connection for its own connections).
+  branchesEl.querySelectorAll('.selected-with-add [data-parent-tile]').forEach(tile => {
+    const parentEl = branchesEl.querySelector(`.contact-row[data-id="${tile.dataset.parentTile}"]`);
+    if (!parentEl) return;
+    const pr = parentEl.getBoundingClientRect();
+    const r = tile.getBoundingClientRect();
+    const startX = pr.right - wrapRect.left;
+    const startY = pr.top + pr.height / 2 - wrapRect.top;
+    const x2 = r.left - wrapRect.left;
+    const y2 = r.top + r.height / 2 - wrapRect.top;
+    const midX = startX + (x2 - startX) * 0.5;
+    const isFirstDegree = tile.dataset.parentTile === selectedId;
+    paths += `<path class="${isFirstDegree ? 'active' : ''}" d="M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${y2}, ${x2} ${y2}"></path>`;
+  });
 
   svg.innerHTML = paths;
+}
+
+function buildRelatedTile(r, parentId) {
+  const tile = document.createElement('div');
+  tile.className = 'contact-row side-tile related-side-tile';
+  tile.dataset.id = r.id;
+  tile.dataset.parentTile = parentId;
+  tile.style.borderLeftColor = categoryColor(r.categoria);
+  tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span><button type="button" class="side-tile-add" title="Adicionar contacto ligado a ${escapeHTML(r.nome)}">+</button>`;
+  tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; focusMode = true; renderAll(); });
+  tile.querySelector('.side-tile-add').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openModal(null, [r.id]);
+  });
+  return tile;
 }
 
 function insertConnectionsAfterSelected() {
@@ -584,21 +600,32 @@ function insertConnectionsAfterSelected() {
 
   const related = (x.relacionados || []).map(id => contacts.find(v => v.id === id)).filter(Boolean);
   related.forEach(r => {
-    const tile = document.createElement('div');
-    tile.className = 'contact-row side-tile related-side-tile';
-    tile.dataset.id = r.id;
-    tile.style.borderLeftColor = categoryColor(r.categoria);
-    tile.innerHTML = `${avatarHTML(r, 'sm')}<span class="name">${escapeHTML(r.nome)}</span><button type="button" class="side-tile-add" title="Adicionar contacto ligado a ${escapeHTML(r.nome)}">+</button>`;
-    tile.addEventListener('click', () => { selectedId = r.id; activeTab = 'geral'; focusMode = true; renderAll(); });
-    tile.querySelector('.side-tile-add').addEventListener('click', (e) => {
-      e.stopPropagation();
-      openModal(null, [r.id]);
-    });
-    stack.appendChild(tile);
+    const node = document.createElement('div');
+    node.className = 'branch-node';
+    node.appendChild(buildRelatedTile(r, selectedId));
+
+    // Web view: also show who each connection knows (their own connections, one level further out).
+    const secondDegree = (r.relacionados || [])
+      .filter(id => id !== selectedId)
+      .map(id => contacts.find(v => v.id === id))
+      .filter(Boolean);
+    if (secondDegree.length) {
+      const subStack = document.createElement('div');
+      subStack.className = 'swa-connections swa-connections-nested';
+      secondDegree.forEach(r2 => {
+        const tile2 = buildRelatedTile(r2, r.id);
+        tile2.classList.add('second-degree-tile');
+        subStack.appendChild(tile2);
+      });
+      node.appendChild(subStack);
+    }
+
+    stack.appendChild(node);
   });
 
   const addTile = document.createElement('div');
   addTile.className = 'contact-row side-tile add-node-row';
+  addTile.dataset.parentTile = selectedId;
   addTile.innerHTML = `<span class="add-node-icon">+</span><span class="name">Adicionar</span>`;
   addTile.addEventListener('click', () => openModal(null, [selectedId]));
   stack.appendChild(addTile);
