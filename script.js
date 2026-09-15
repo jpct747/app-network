@@ -382,8 +382,10 @@ function addCategory(name) {
 function removeCategory(name) {
   const count = contacts.filter(c => c.categoria === name).length;
   if (count > 0) {
-    alert(`Não pode remover "${name}" enquanto tiver contactos nessa categoria (${count}). Mude-os de categoria primeiro.`);
-    return false;
+    const ok = confirm(`A categoria "${name}" tem ${count} contacto${count === 1 ? '' : 's'}. Ao remover, ${count === 1 ? 'esse contacto fica' : 'esses contactos ficam'} sem categoria. Remover mesmo assim?`);
+    if (!ok) return false;
+    contacts.forEach(c => { if (c.categoria === name) c.categoria = ''; });
+    saveContacts(contacts);
   }
   baseCategoryList = baseCategoryList.filter(c => c !== name);
   saveCategoryList();
