@@ -1475,43 +1475,54 @@ densityBtn.addEventListener('click', () => {
   applyDensity();
 });
 
-// ---------- Landing screen: pick a category before entering the network ----------
-function circleSizeForCount(n) {
-  return Math.round(175 + Math.min(135, Math.sqrt(n) * 34));
+// ---------- Landing screen: a category "pizza" wheel before entering the network ----------
+function polarPoint(cx, cy, r, angle) {
+  return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }
-function dotCountForCategory(n) {
-  return Math.max(6, Math.min(34, Math.round(6 + Math.sqrt(n) * 5)));
+function donutWedgePath(cx, cy, r0, r1, a0, a1) {
+  const outerStart = polarPoint(cx, cy, r1, a0);
+  const outerEnd = polarPoint(cx, cy, r1, a1);
+  const innerEnd = polarPoint(cx, cy, r0, a1);
+  const innerStart = polarPoint(cx, cy, r0, a0);
+  const largeArc = (a1 - a0) > Math.PI ? 1 : 0;
+  return [
+    `M ${outerStart.x} ${outerStart.y}`,
+    `A ${r1} ${r1} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+    `L ${innerEnd.x} ${innerEnd.y}`,
+    `A ${r0} ${r0} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
+    'Z',
+  ].join(' ');
 }
 
 function renderLanding() {
-  const wrap = document.getElementById('landingCircles');
+  const svg = document.getElementById('landingPie');
+  const centerEl = document.getElementById('landingPieCenter');
   const cats = getCategoryList();
-  wrap.innerHTML = cats.map(cat => {
+  const n = cats.length;
+  const cx = 300, cy = 300, r0 = 95, r1 = 280, gap = 0.012;
+
+  svg.setAttribute('viewBox', '0 0 600 600');
+  svg.innerHTML = cats.map((cat, i) => {
     const count = contacts.filter(c => c.categoria === cat).length;
-    const size = circleSizeForCount(count);
-    const color = categoryColor(cat);
-    const dots = dotCountForCategory(count);
-    let dotsHTML = '';
-    for (let i = 0; i < dots; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = Math.sqrt(Math.random()) * 40;
-      const cx = 50 + Math.cos(angle) * radius;
-      const cy = 50 + Math.sin(angle) * radius;
-      const dotSize = 7 + Math.random() * 8;
-      const opacity = 0.5 + Math.random() * 0.5;
-      dotsHTML += `<span class="landing-dot" style="left:${cx.toFixed(1)}%;top:${cy.toFixed(1)}%;width:${dotSize.toFixed(1)}px;height:${dotSize.toFixed(1)}px;background:${color};opacity:${opacity.toFixed(2)}"></span>`;
-    }
-    return `
-      <div class="landing-item" data-cat="${escapeHTML(cat)}" tabindex="0" role="button">
-        <div class="landing-circle${count === 0 ? ' empty' : ''}" style="width:${size}px;height:${size}px;">
-          <div class="dots">${dotsHTML}</div>
-        </div>
-        <span class="lc-label" style="max-width:${Math.round(size * 0.86)}px">${escapeHTML(cat)}</span>
-      </div>
-    `;
+    const a0 = (i / n) * Math.PI * 2 - Math.PI / 2 + gap / 2;
+    const a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2 - gap / 2;
+    const mid = (a0 + a1) / 2;
+    const tx = (Math.cos(mid) * 14).toFixed(1);
+    const ty = (Math.sin(mid) * 14).toFixed(1);
+    const d = donutWedgePath(cx, cy, r0, r1, a0, a1);
+    return `<path class="pie-wedge${count === 0 ? ' empty' : ''}" d="${d}" fill="${categoryColor(cat)}" tabindex="0" role="button" data-cat="${escapeHTML(cat)}" data-count="${count}" style="--tx:${tx}px;--ty:${ty}px"></path>`;
   }).join('');
 
-  wrap.querySelectorAll('.landing-item').forEach(el => {
+  function setCenter(cat, count) {
+    if (cat == null) { centerEl.innerHTML = ''; return; }
+    centerEl.innerHTML = `<span class="lpc-name">${escapeHTML(cat)}</span><span class="lpc-count">${count} contacto${count === 1 ? '' : 's'}</span>`;
+  }
+
+  svg.querySelectorAll('.pie-wedge').forEach(el => {
+    el.addEventListener('mouseenter', () => setCenter(el.dataset.cat, Number(el.dataset.count)));
+    el.addEventListener('focus', () => setCenter(el.dataset.cat, Number(el.dataset.count)));
+    el.addEventListener('mouseleave', () => setCenter(null));
+    el.addEventListener('blur', () => setCenter(null));
     el.addEventListener('click', () => enterAppForCategory(el.dataset.cat));
     el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterAppForCategory(el.dataset.cat); } });
   });

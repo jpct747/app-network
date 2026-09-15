@@ -133,66 +133,59 @@ body:not(.landing-active) .landing-screen { display: none; }
   margin: -28px 0 0;
 }
 
-.landing-circles {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  row-gap: 40px;
+.landing-pie-wrap {
+  position: relative;
+  width: min(560px, 84vw);
+  aspect-ratio: 1;
 }
 
-.landing-item {
+.landing-pie {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pie-wedge {
+  transform-box: fill-box;
+  transform-origin: center;
+  stroke: var(--page-plane);
+  stroke-width: 3;
+  cursor: pointer;
+  outline: none;
+  transition: transform .2s ease, filter .2s ease, opacity .2s ease;
+}
+.pie-wedge:hover, .pie-wedge:focus-visible {
+  transform: translate(var(--tx), var(--ty)) scale(1.055);
+  filter: brightness(1.22);
+}
+.pie-wedge.empty { opacity: 0.4; }
+
+.landing-pie-center {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin: 0 -6px;
-  cursor: pointer;
-}
-.landing-item:focus-visible { outline: none; }
-.landing-item:focus-visible .landing-circle { border-color: var(--wire-active); }
-
-.landing-circle {
-  position: relative;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, var(--surface-2), var(--surface-1) 75%);
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-}
-.landing-item:hover .landing-circle {
-  transform: translateY(-5px) scale(1.04);
-  border-color: var(--wire-active);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  z-index: 5;
-}
-.landing-circle.empty { opacity: 0.42; }
-
-.landing-circle .dots {
-  position: absolute;
-  inset: 0;
-}
-
-.landing-dot {
-  position: absolute;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.landing-item .lc-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  line-height: 1.35;
+  justify-content: center;
   text-align: center;
-  max-width: 200px;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  transition: color .15s ease;
+  pointer-events: none;
+  padding: 0 20%;
 }
-.landing-item:hover .lc-label { color: var(--text-primary); }
+
+.lpc-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
+
+.lpc-count {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
 
 .app {
   display: grid;
