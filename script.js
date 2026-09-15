@@ -1493,9 +1493,70 @@ densityBtn.addEventListener('click', () => {
   applyDensity();
 });
 
+// ---------- Landing screen: pick a category before entering the network ----------
+function circleSizeForCount(n) {
+  return Math.round(112 + Math.min(88, Math.sqrt(n) * 24));
+}
+function dotCountForCategory(n) {
+  return Math.max(5, Math.min(28, Math.round(5 + Math.sqrt(n) * 4)));
+}
+
+function renderLanding() {
+  const wrap = document.getElementById('landingCircles');
+  const cats = getCategoryList();
+  wrap.innerHTML = cats.map(cat => {
+    const count = contacts.filter(c => c.categoria === cat).length;
+    const size = circleSizeForCount(count);
+    const color = categoryColor(cat);
+    const dots = dotCountForCategory(count);
+    let dotsHTML = '';
+    for (let i = 0; i < dots; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.sqrt(Math.random()) * 40;
+      const cx = 50 + Math.cos(angle) * radius;
+      const cy = 50 + Math.sin(angle) * radius;
+      const dotSize = 7 + Math.random() * 8;
+      const opacity = 0.5 + Math.random() * 0.5;
+      dotsHTML += `<span class="landing-dot" style="left:${cx.toFixed(1)}%;top:${cy.toFixed(1)}%;width:${dotSize.toFixed(1)}px;height:${dotSize.toFixed(1)}px;background:${color};opacity:${opacity.toFixed(2)}"></span>`;
+    }
+    return `
+      <div class="landing-item" data-cat="${escapeHTML(cat)}" tabindex="0" role="button">
+        <div class="landing-circle${count === 0 ? ' empty' : ''}" style="width:${size}px;height:${size}px;">
+          <div class="dots">${dotsHTML}</div>
+        </div>
+        <span class="lc-label">${escapeHTML(cat)}</span>
+      </div>
+    `;
+  }).join('');
+
+  wrap.querySelectorAll('.landing-item').forEach(el => {
+    el.addEventListener('click', () => enterAppForCategory(el.dataset.cat));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterAppForCategory(el.dataset.cat); } });
+  });
+}
+
+function enterAppForCategory(cat) {
+  activeCategory = cat;
+  statView = 'todos';
+  focusMode = false;
+  searchTerm = '';
+  document.getElementById('searchInput').value = '';
+  selectionSafety();
+  document.body.classList.remove('landing-active');
+  renderAll();
+}
+
+function showLanding() {
+  document.body.classList.add('landing-active');
+  renderLanding();
+}
+
+document.getElementById('landingBackBtn').addEventListener('click', showLanding);
+
 // ---------- Init ----------
 selectionSafety();
 applyDensity();
+renderLanding();
 renderAll();
 window.addEventListener('resize', drawCurves);
 new ResizeObserver(drawCurves).observe(wrapEl);
