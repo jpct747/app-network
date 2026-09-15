@@ -1523,7 +1523,7 @@ document.getElementById('landingBackBtn').addEventListener('click', showLanding)
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
   }
   function seed() {
-    const count = Math.round((W * H) / 5500);
+    const count = Math.round((W * H) / 2800);
     particles = Array.from({ length: count }, () => ({
       x: Math.random() * W, y: Math.random() * H,
       vx: (Math.random() - 0.5) * 0.12, vy: (Math.random() - 0.5) * 0.12,
